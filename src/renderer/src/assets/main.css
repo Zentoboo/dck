@@ -1,0 +1,21 @@
+@import './base.css';
+
+.bg-main {
+    background-color: var(--color-main);
+}
+
+.bg-main-chosen {
+    background-color: var(--color-main-chosen);
+}
+
+.bg-selected {
+    background-color: var(--color-selected);
+}
+
+.text-main {
+    color: var(--color-text);
+}
+
+.text-highlight {
+    color: var(--color-highlight);
+}
