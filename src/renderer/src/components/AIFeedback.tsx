@@ -1,11 +1,13 @@
 import React from 'react';
 import { AIEvaluation } from '../ai/AIProvider';
+import { highlightKeywordsInText } from '../utils/textHighlighter';
 
 interface AIFeedbackProps {
     evaluation: AIEvaluation;
+    userAnswer?: string;
 }
 
-const AIFeedback: React.FC<AIFeedbackProps> = ({ evaluation }) => {
+const AIFeedback: React.FC<AIFeedbackProps> = ({ evaluation, userAnswer }) => {
     const getLevelLabel = (level: string): string => {
         return level
             .split('_')
@@ -17,6 +19,11 @@ const AIFeedback: React.FC<AIFeedbackProps> = ({ evaluation }) => {
         const labels = ['', 'Again', 'Hard', 'Good', 'Easy'];
         return labels[rating];
     };
+
+    // Highlight keywords in user's answer if provided
+    const highlightedSegments = userAnswer
+        ? highlightKeywordsInText(userAnswer, evaluation.keywordAnalysis.foundKeywords)
+        : null;
 
     return (
         <div className="ai-feedback">
@@ -37,6 +44,29 @@ const AIFeedback: React.FC<AIFeedbackProps> = ({ evaluation }) => {
                     <span className="rating-text">{getRatingLabel(evaluation.suggestedRating)}</span>
                 </div>
             </div>
+
+            {/* Show highlighted user answer if available */}
+            {highlightedSegments && highlightedSegments.length > 0 && (
+                <div className="highlighted-answer-section">
+                    <h4>Your Answer (with highlights):</h4>
+                    <div className="highlighted-answer">
+                        {highlightedSegments.map((segment, index) => (
+                            segment.highlight === 'correct' ? (
+                                <mark key={index} className="keyword-highlight">
+                                    {segment.text}
+                                </mark>
+                            ) : (
+                                <span key={index}>{segment.text}</span>
+                            )
+                        ))}
+                    </div>
+                    <p className="highlight-legend">
+                        <span className="legend-item">
+                            <mark className="keyword-highlight">Highlighted</mark> = Keywords found in your answer
+                        </span>
+                    </p>
+                </div>
+            )}
 
             <div className="evaluation-categories">
                 {/* Accuracy */}

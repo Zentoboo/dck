@@ -26,16 +26,6 @@ export interface SessionSummary {
   };
 }
 
-function getRatingEmoji(rating: Rating): string {
-  switch (rating) {
-    case Rating.Again: return '[1]';
-    case Rating.Hard: return '[2]';
-    case Rating.Good: return '[3]';
-    case Rating.Easy: return '[4]';
-    default: return '?';
-  }
-}
-
 function getRatingText(rating: Rating): string {
   switch (rating) {
     case Rating.Again: return 'Again (1/4)';
@@ -46,6 +36,16 @@ function getRatingText(rating: Rating): string {
   }
 }
 
+function getRatingLevel(rating: Rating): string {
+  switch (rating) {
+    case Rating.Again: return '1';
+    case Rating.Hard: return '2';
+    case Rating.Good: return '3';
+    case Rating.Easy: return '4';
+    default: return '0';
+  }
+}
+
 export function generateSessionMarkdown(
   summary: SessionSummary,
   cards: SessionCardRecord[]
@@ -53,8 +53,13 @@ export function generateSessionMarkdown(
   const duration = Math.round((summary.endTime.getTime() - summary.startTime.getTime()) / 1000);
   const correctCount = summary.ratings.good + summary.ratings.easy;
   const incorrectCount = summary.ratings.again + summary.ratings.hard;
+  const accuracy = summary.cardsReviewed > 0 
+    ? Math.round((correctCount / summary.cardsReviewed) * 100) 
+    : 0;
   
-  let md = `# Flashcard Session - ${summary.startTime.toLocaleDateString('en-US', { 
+  // Header
+  let md = `# Flashcard Review Session\n\n`;
+  md += `**Date:** ${summary.startTime.toLocaleDateString('en-US', { 
     month: 'long', 
     day: 'numeric', 
     year: 'numeric',
@@ -62,77 +67,98 @@ export function generateSessionMarkdown(
     minute: '2-digit'
   })}\n\n`;
   
-  md += `**Files Reviewed:** ${summary.files.join(', ')}\n`;
-  md += `**Duration:** ${duration}s\n`;
-  md += `**Cards Reviewed:** ${summary.cardsReviewed}\n`;
-  md += `**Performance:** ${correctCount} correct, ${incorrectCount} incorrect\n\n`;
+  // Session Summary
+  md += `## Session Summary\n\n`;
+  md += `| Metric | Value |\n`;
+  md += `|--------|-------|\n`;
+  md += `| Files Reviewed | ${summary.files.join(', ')} |\n`;
+  md += `| Total Duration | ${duration}s |\n`;
+  md += `| Cards Reviewed | ${summary.cardsReviewed} |\n`;
+  md += `| Accuracy Rate | ${accuracy}% |\n`;
+  md += `| Correct Responses | ${correctCount} |\n`;
+  md += `| Incorrect Responses | ${incorrectCount} |\n\n`;
+  
+  // Performance Breakdown
+  md += `### Performance Distribution\n\n`;
+  md += `| Rating | Count | Percentage |\n`;
+  md += `|--------|-------|------------|\n`;
+  md += `| Again (1/4) | ${summary.ratings.again} | ${Math.round((summary.ratings.again / summary.cardsReviewed) * 100)}% |\n`;
+  md += `| Hard (2/4) | ${summary.ratings.hard} | ${Math.round((summary.ratings.hard / summary.cardsReviewed) * 100)}% |\n`;
+  md += `| Good (3/4) | ${summary.ratings.good} | ${Math.round((summary.ratings.good / summary.cardsReviewed) * 100)}% |\n`;
+  md += `| Easy (4/4) | ${summary.ratings.easy} | ${Math.round((summary.ratings.easy / summary.cardsReviewed) * 100)}% |\n\n`;
+  
   md += `---\n\n`;
   
+  // Individual Card Reviews
+  md += `## Detailed Card Reviews\n\n`;
+  
   cards.forEach((card, index) => {
-    md += `## Card ${index + 1} - ${card.sourceFile}\n`;
-    md += `**Question:** ${card.question}\n\n`;
+    md += `### Card ${index + 1}\n\n`;
+    md += `**Source File:** \`${card.sourceFile}\`\n\n`;
     
+    // Question
+    md += `**Question:**\n`;
+    md += `> ${card.question}\n\n`;
+    
+    // Your Answer
     md += `**Your Answer:**\n`;
-    md += card.userAnswer ? card.userAnswer + '\n\n' : '_(No answer provided)_\n\n';
+    if (card.userAnswer && card.userAnswer.trim()) {
+      md += `\`\`\`\n${card.userAnswer}\n\`\`\`\n\n`;
+    } else {
+      md += `> _(No answer provided)_\n\n`;
+    }
     
     // AI Evaluation (if available)
     if (card.aiEvaluation) {
       const ai = card.aiEvaluation;
       md += `**AI Evaluation:**\n\n`;
-      md += `**Overall Score:** ${ai.overallScore}%\n`;
-      md += `**Suggested Rating:** ${ai.suggestedRating}/4\n\n`;
+      
+      // Overall Metrics
+      md += `- **Overall Score:** ${ai.overallScore}%\n`;
+      md += `- **Suggested Rating:** ${getRatingText(ai.suggestedRating)}\n\n`;
+      
+      // Detailed Assessment
+      md += `**Assessment Details:**\n\n`;
+      md += `| Category | Level | Notes |\n`;
+      md += `|----------|-------|-------|\n`;
       
       // Accuracy
-      md += `**Accuracy:** ${ai.accuracy.level.replace(/_/g, ' ')}\n`;
-      if (ai.accuracy.explanation) {
-        md += `  ${ai.accuracy.explanation}\n`;
-      }
-      md += `\n`;
+      const accuracyLevel = ai.accuracy.level.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      md += `| Accuracy | ${accuracyLevel} | ${ai.accuracy.explanation || '-'} |\n`;
       
       // Completeness
-      md += `**Completeness:** ${ai.completeness.level.replace(/_/g, ' ')}\n`;
+      const completenessLevel = ai.completeness.level.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      let completenessNote = '-';
       if (ai.completeness.missingPoints && ai.completeness.missingPoints.length > 0) {
-        md += `  Missing points:\n`;
-        ai.completeness.missingPoints.forEach(point => {
-          md += `  - ${point}\n`;
-        });
+        completenessNote = ai.completeness.missingPoints.join('; ');
       }
-      md += `\n`;
+      md += `| Completeness | ${completenessLevel} | ${completenessNote} |\n`;
       
       // Clarity
-      md += `**Clarity:** ${ai.clarity.level.replace(/_/g, ' ')}\n`;
-      if (ai.clarity.suggestion) {
-        md += `  ${ai.clarity.suggestion}\n`;
-      }
-      md += `\n`;
+      const clarityLevel = ai.clarity.level.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      md += `| Clarity | ${clarityLevel} | ${ai.clarity.suggestion || '-'} |\n`;
       
       // Reasoning
-      md += `**Reasoning Quality:** ${ai.reasoning.level.replace(/_/g, ' ')}\n`;
-      if (ai.reasoning.explanation) {
-        md += `  ${ai.reasoning.explanation}\n`;
-      }
-      md += `\n`;
+      const reasoningLevel = ai.reasoning.level.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      md += `| Reasoning Quality | ${reasoningLevel} | ${ai.reasoning.explanation || '-'} |\n`;
       
       // Structure
-      md += `**Answer Structure:** ${ai.structure.level.replace(/_/g, ' ')}\n`;
-      if (ai.structure.feedback) {
-        md += `  ${ai.structure.feedback}\n`;
-      }
-      md += `\n`;
+      const structureLevel = ai.structure.level.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      md += `| Answer Structure | ${structureLevel} | ${ai.structure.feedback || '-'} |\n\n`;
       
       // Keyword Analysis
-      md += `**Keyword Analysis (${ai.keywordAnalysis.keywordScore}%):**\n`;
+      md += `**Keyword Analysis:** ${ai.keywordAnalysis.keywordScore}%\n\n`;
       if (ai.keywordAnalysis.foundKeywords.length > 0) {
-        md += `  Found: ${ai.keywordAnalysis.foundKeywords.join(', ')}\n`;
+        md += `- **Keywords Found:** ${ai.keywordAnalysis.foundKeywords.join(', ')}\n`;
       }
       if (ai.keywordAnalysis.missingKeywords.length > 0) {
-        md += `  Missing: ${ai.keywordAnalysis.missingKeywords.join(', ')}\n`;
+        md += `- **Keywords Missing:** ${ai.keywordAnalysis.missingKeywords.join(', ')}\n`;
       }
       md += `\n`;
       
       // Improvements
       if (ai.improvements.length > 0) {
-        md += `**Suggested Improvements:**\n`;
+        md += `**Areas for Improvement:**\n`;
         ai.improvements.forEach(imp => {
           md += `- ${imp}\n`;
         });
@@ -141,7 +167,7 @@ export function generateSessionMarkdown(
       
       // Strengths
       if (ai.strengths.length > 0) {
-        md += `**Strengths:**\n`;
+        md += `**Identified Strengths:**\n`;
         ai.strengths.forEach(str => {
           md += `- ${str}\n`;
         });
@@ -149,19 +175,52 @@ export function generateSessionMarkdown(
       }
     }
     
+    // Expected Answer
     md += `**Expected Answer:**\n`;
-    md += card.expectedAnswer + '\n\n';
+    md += `\`\`\`\n${card.expectedAnswer}\n\`\`\`\n\n`;
     
-    md += `**Self-Rating:** ${getRatingEmoji(card.rating)} ${getRatingText(card.rating)}\n`;
-    md += `**FSRS Interval:** ${card.oldInterval} days → ${card.newInterval} days\n\n`;
+    // Rating & Scheduling
+    md += `**Review Outcome:**\n`;
+    md += `- **Self-Rating:** ${getRatingText(card.rating)}\n`;
+    md += `- **Spaced Repetition Interval:** ${card.oldInterval} days → ${card.newInterval} days\n\n`;
+    
     md += `---\n\n`;
   });
   
-  md += `## Summary\n`;
-  md += `- **Again (1):** ${summary.ratings.again} cards\n`;
-  md += `- **Hard (2):** ${summary.ratings.hard} cards\n`;
-  md += `- **Good (3):** ${summary.ratings.good} cards\n`;
-  md += `- **Easy (4):** ${summary.ratings.easy} cards\n\n`;
+  // Final Statistics
+  md += `## Statistical Analysis\n\n`;
+  
+  md += `### Overall Performance Metrics\n`;
+  md += `- Total Cards Reviewed: ${summary.cardsReviewed}\n`;
+  md += `- Session Duration: ${duration} seconds (${Math.round(duration / summary.cardsReviewed)} seconds per card)\n`;
+  md += `- Overall Accuracy: ${accuracy}%\n`;
+  md += `- Correct Responses: ${correctCount}/${summary.cardsReviewed}\n`;
+  md += `- Incorrect Responses: ${incorrectCount}/${summary.cardsReviewed}\n\n`;
+  
+  md += `### Rating Distribution Summary\n`;
+  md += `- Again (1/4): ${summary.ratings.again} cards (${Math.round((summary.ratings.again / summary.cardsReviewed) * 100)}%)\n`;
+  md += `- Hard (2/4): ${summary.ratings.hard} cards (${Math.round((summary.ratings.hard / summary.cardsReviewed) * 100)}%)\n`;
+  md += `- Good (3/4): ${summary.ratings.good} cards (${Math.round((summary.ratings.good / summary.cardsReviewed) * 100)}%)\n`;
+  md += `- Easy (4/4): ${summary.ratings.easy} cards (${Math.round((summary.ratings.easy / summary.cardsReviewed) * 100)}%)\n\n`;
+  
+  // Performance Assessment
+  if (accuracy < 50) {
+    md += `### Performance Assessment\n`;
+    md += `Current accuracy is below 50%. Consider the following strategies:\n`;
+    md += `- Review the source material in greater detail\n`;
+    md += `- Break down complex concepts into smaller, more manageable flashcards\n`;
+    md += `- Increase review frequency for difficult topics\n`;
+    md += `- Ensure adequate understanding before proceeding to new material\n\n`;
+  } else if (accuracy >= 50 && accuracy < 75) {
+    md += `### Performance Assessment\n`;
+    md += `Accuracy is satisfactory. Continue with regular review schedule and focus on cards rated as "Again" or "Hard" to improve retention.\n\n`;
+  } else if (accuracy >= 75 && accuracy < 90) {
+    md += `### Performance Assessment\n`;
+    md += `Strong performance demonstrated. Material is being effectively retained. Continue current study approach.\n\n`;
+  } else {
+    md += `### Performance Assessment\n`;
+    md += `Excellent mastery of material demonstrated. Consider advancing to more challenging topics or reducing review frequency for mastered cards.\n\n`;
+  }
   
   return md;
 }

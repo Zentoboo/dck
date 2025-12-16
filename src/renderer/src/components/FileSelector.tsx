@@ -9,12 +9,14 @@ interface FileWithStats {
   totalCards: number;
 }
 
+export type SortOrder = 'random' | 'sequential' | 'hardest' | 'easiest';
+
 interface FileSelectorProps {
   files: FileWithStats[];
   selectedFiles: Set<string>;
   onToggleFile: (path: string) => void;
   onSetFiles: (paths: string[]) => void;
-  onStart: (studyMode: boolean) => void;
+  onStart: (studyMode: boolean, sortOrder: SortOrder) => void;
   onCancel: () => void;
 }
 
@@ -30,6 +32,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
   const [savedDecks, setSavedDecks] = React.useState<SavedDeck[]>([]);
   const [showSaveDeck, setShowSaveDeck] = React.useState(false);
   const [deckName, setDeckName] = React.useState('');
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>('random');
 
   // Auto-enable study mode if no cards are due
   const totalDue = files.reduce((sum, f) => sum + f.dueCount + f.newCount, 0);
@@ -187,6 +190,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                         <>
                           {file.dueCount > 0 && <span className="due-count">{file.dueCount} due</span>}
                           {file.newCount > 0 && <span className="new-count">{file.newCount} new</span>}
+                          <span className="total-count">/ {file.totalCards} total</span>
                         </>
                       ) : (
                         <span className="no-due">0 due / {file.totalCards} total</span>
@@ -215,6 +219,19 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                 onChange={(e) => setStudyMode(e.target.checked)}
               />
               <span>Study Mode (review all cards)</span>
+            </label>
+            <label className="sort-order-select">
+              <span>Card Order:</span>
+              <select 
+                value={sortOrder} 
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                className="sort-select"
+              >
+                <option value="random">Random</option>
+                <option value="sequential">Sequential (file order)</option>
+                <option value="hardest">Hardest First</option>
+                <option value="easiest">Easiest First</option>
+              </select>
             </label>
           </div>
           <div className="footer-buttons">
@@ -263,7 +280,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
             )}
             <button
               className="btn-primary"
-              onClick={() => onStart(studyMode)}
+              onClick={() => onStart(studyMode, sortOrder)}
               disabled={selectedFiles.size === 0 || buttonCount === 0}
             >
               {selectedFiles.size === 0 ? 'Select files' :

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AIConfigManager, SavedProvider } from '../ai/AIConfigManager';
 import { reloadAIEvaluator } from '../ai/AIEvaluator';
+import { ShortcutManager, ShortcutAction } from '../utils/ShortcutManager';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 
@@ -23,12 +24,21 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
     const [showSaveAlert, setShowSaveAlert] = useState(false);
 
+    // Shortcuts state
+    const [shortcuts, setShortcuts] = useState<ShortcutAction[]>([]);
+    const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [conflictError, setConflictError] = useState<string | null>(null);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [shortcutToReset, setShortcutToReset] = useState<string | null>(null);
+
     useEffect(() => {
         loadProviders();
         const config = AIConfigManager.getConfig();
         if (config) {
             setEnabled(config.enabled);
         }
+        loadShortcuts();
     }, []);
 
     const loadProviders = () => {
@@ -37,6 +47,11 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
 
         const active = AIConfigManager.getActiveProvider();
         setActiveProviderId(active?.id || null);
+    };
+
+    const loadShortcuts = () => {
+        const loadedShortcuts = ShortcutManager.getShortcuts();
+        setShortcuts(loadedShortcuts);
     };
 
     const handleAddProvider = () => {
@@ -80,7 +95,10 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     };
 
     const handleToggleEnabled = (newEnabled: boolean) => {
-        AIConfigManager.setEnabled(newEnabled);
+        const config = AIConfigManager.getConfig();
+        if (config) {
+            AIConfigManager.saveConfig({ ...config, enabled: newEnabled });
+        }
         setEnabled(newEnabled);
         reloadAIEvaluator();
     };
@@ -93,24 +111,87 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
         }
     };
 
-    const shortcuts = [
-        { category: 'General', key: 'Ctrl/Cmd + S', description: 'Save current file' },
-        { category: 'General', key: 'Ctrl/Cmd + P', description: 'Toggle preview mode' },
-        { category: 'General', key: 'Escape', description: 'Close modals' },
-        { category: 'General', key: 'Enter', description: 'Confirm in modals' },
+    // Shortcut handlers
+    const handleEditShortcut = (id: string) => {
+        setEditingShortcut(id);
+        setIsRecording(true);
+        setConflictError(null);
+    };
 
-        { category: 'Formatting', key: 'Ctrl/Cmd + B', description: 'Bold text' },
-        { category: 'Formatting', key: 'Ctrl/Cmd + I', description: 'Italic text' },
-        { category: 'Formatting', key: 'Ctrl/Cmd + K', description: 'Inline code' },
-        { category: 'Formatting', key: 'Ctrl/Cmd + U', description: 'Strikethrough text' },
+    const handleKeyDown = (e: React.KeyboardEvent, shortcutId: string) => {
+        if (!isRecording) return;
 
-        { category: 'Headings', key: 'Ctrl/Cmd + 1', description: 'Heading 1' },
-        { category: 'Headings', key: 'Ctrl/Cmd + 2', description: 'Heading 2' },
-        { category: 'Headings', key: 'Ctrl/Cmd + 3', description: 'Heading 3' },
+        e.preventDefault();
+        e.stopPropagation();
 
-        { category: 'Indentation', key: 'Tab', description: 'Indent line/selection' },
-        { category: 'Indentation', key: 'Shift + Tab', description: 'Unindent line/selection' },
-    ];
+        // Handle Escape to cancel
+        if (e.key === 'Escape') {
+            handleCancelEdit();
+            return;
+        }
+
+        // Ignore just modifier keys
+        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+            return;
+        }
+
+        const keyString = ShortcutManager.eventToKeyString(e.nativeEvent as KeyboardEvent);
+
+        if (!ShortcutManager.isValidKeyString(keyString)) {
+            setConflictError('Invalid key combination');
+            return;
+        }
+
+        const success = ShortcutManager.updateShortcut(shortcutId, keyString);
+
+        if (success) {
+            loadShortcuts();
+            setEditingShortcut(null);
+            setIsRecording(false);
+            setConflictError(null);
+        } else {
+            setConflictError('This key combination is already in use');
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingShortcut(null);
+        setIsRecording(false);
+        setConflictError(null);
+    };
+
+    const handleResetShortcut = (id: string) => {
+        setShortcutToReset(id);
+        setShowResetConfirm(true);
+    };
+
+    const confirmResetShortcut = () => {
+        if (shortcutToReset) {
+            ShortcutManager.resetShortcut(shortcutToReset);
+            loadShortcuts();
+        }
+        setShowResetConfirm(false);
+        setShortcutToReset(null);
+    };
+
+    const handleResetAllShortcuts = () => {
+        if (window.confirm('Are you sure you want to reset all shortcuts to their defaults?')) {
+            ShortcutManager.resetToDefaults();
+            loadShortcuts();
+        }
+    };
+
+    const getCategoryName = (category: string): string => {
+        switch (category) {
+            case 'editor': return 'Editor';
+            case 'file': return 'File Management';
+            case 'navigation': return 'Navigation';
+            case 'session': return 'Flashcard Session';
+            default: return category;
+        }
+    };
+
+    const groupedShortcuts = ShortcutManager.getShortcutsByCategory();
 
     return (
         <>
@@ -125,6 +206,17 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 variant="danger"
             />
 
+            <ConfirmModal
+                isOpen={showResetConfirm}
+                title="Reset Shortcut"
+                message="Are you sure you want to reset this shortcut to its default?"
+                confirmText="Reset"
+                cancelText="Cancel"
+                onConfirm={confirmResetShortcut}
+                onCancel={() => setShowResetConfirm(false)}
+                variant="default"
+            />
+
             <AlertModal
                 isOpen={showSaveAlert}
                 title="Provider Saved"
@@ -133,7 +225,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
             />
 
             <div className="flashcard-session-container">
-                <div className="flashcard-modal">
+                <div className="flashcard-modal settings-modal">
                     <div className="modal-header">
                         <h2>Settings</h2>
                         <button className="close-btn" onClick={onClose}>×</button>
@@ -276,16 +368,84 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="settings-content">
-                                <div className="shortcuts-list">
-                                    <h3>Editor Shortcuts</h3>
-                                    {shortcuts.map((shortcut, index) => (
-                                        <div key={index} className="shortcut-item">
-                                            <kbd className="shortcut-key">{shortcut.key}</kbd>
-                                            <span className="shortcut-description">{shortcut.description}</span>
-                                        </div>
-                                    ))}
+                            <div className="settings-content shortcuts-content">
+                                <div className="shortcuts-header">
+                                    <p className="shortcuts-description">
+                                        Click on any shortcut to edit it, then press your desired key combination. Press Escape to cancel.
+                                    </p>
+                                    <button
+                                        className="btn-reset-all"
+                                        onClick={handleResetAllShortcuts}
+                                    >
+                                        Reset All to Defaults
+                                    </button>
                                 </div>
+
+                                {conflictError && (
+                                    <div className="shortcut-error">
+                                        {conflictError}
+                                    </div>
+                                )}
+
+                                {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
+                                    categoryShortcuts.length > 0 && (
+                                        <div key={category} className="shortcut-category">
+                                            <h3>{getCategoryName(category)}</h3>
+                                            <div className="shortcuts-list">
+                                                {categoryShortcuts.map(shortcut => (
+                                                    <div key={shortcut.id} className="shortcut-item">
+                                                        <div className="shortcut-info">
+                                                            <span className="shortcut-name">{shortcut.name}</span>
+                                                            <span className="shortcut-description">{shortcut.description}</span>
+                                                        </div>
+                                                        <div className="shortcut-controls">
+                                                            {editingShortcut === shortcut.id ? (
+                                                                <>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="shortcut-input recording"
+                                                                        value={isRecording ? 'Press keys...' : shortcut.key}
+                                                                        onKeyDown={(e) => handleKeyDown(e, shortcut.id)}
+                                                                        autoFocus
+                                                                        readOnly
+                                                                    />
+                                                                    <button
+                                                                        className="btn-cancel-shortcut"
+                                                                        onClick={handleCancelEdit}
+                                                                        title="Cancel"
+                                                                    >
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">
+                                                                            <path d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <kbd 
+                                                                        className="shortcut-key"
+                                                                        onClick={() => handleEditShortcut(shortcut.id)}
+                                                                        title="Click to edit"
+                                                                    >
+                                                                        {ShortcutManager.formatKeyForDisplay(shortcut.key)}
+                                                                    </kbd>
+                                                                    {shortcut.key !== shortcut.defaultKey && (
+                                                                        <button
+                                                                            className="btn-reset-shortcut"
+                                                                            onClick={() => handleResetShortcut(shortcut.id)}
+                                                                            title="Reset to default"
+                                                                        >
+                                                                            ↺
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )
+                                ))}
                             </div>
                         )}
                     </div>

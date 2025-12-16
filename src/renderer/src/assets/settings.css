@@ -1,0 +1,375 @@
+/* Settings-specific styles - Only what's not already in base.css */
+
+/* AI Settings */
+.setting-section {
+    margin-bottom: 32px;
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.setting-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.setting-description {
+    margin: 8px 0 0 30px;
+    font-size: 0.9rem;
+    color: var(--color-comment);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--color-text);
+}
+
+.btn-add-provider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--color-highlight);
+    color: var(--color-text);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.btn-add-provider:hover {
+    background-color: #3e4451;
+}
+
+.add-provider-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: var(--color-bg);
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.setting-input,
+.setting-select {
+    padding: 10px 12px;
+    background-color: var(--color-main);
+    border: 1px solid var(--color-highlight);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.setting-input:focus,
+.setting-select:focus {
+    outline: none;
+    border-color: #61afef;
+}
+
+.btn-save-provider {
+    padding: 10px 16px;
+    background-color: #61afef;
+    color: var(--color-main);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-save-provider:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.no-providers-message {
+    padding: 16px;
+    background-color: var(--color-bg);
+    border-radius: 4px;
+    color: var(--color-comment);
+    text-align: center;
+}
+
+.providers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.provider-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-highlight);
+    border-radius: 4px;
+    transition: border-color 0.2s;
+}
+
+.provider-item.active {
+    border-color: #61afef;
+}
+
+.provider-info {
+    flex: 1;
+}
+
+.provider-name {
+    font-size: 1rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.provider-type {
+    font-size: 0.85rem;
+    color: var(--color-comment);
+    margin-top: 4px;
+}
+
+.provider-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-set-active {
+    padding: 6px 12px;
+    background-color: var(--color-highlight);
+    color: var(--color-text);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-set-active:hover {
+    background-color: #3e4451;
+}
+
+.active-badge {
+    padding: 6px 12px;
+    background-color: #61afef;
+    color: var(--color-main);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.btn-delete-provider {
+    background: none;
+    border: none;
+    color: var(--color-comment);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-delete-provider:hover {
+    background-color: var(--color-danger);
+    color: var(--color-main);
+}
+
+/* Editable Keyboard Shortcuts - New functionality */
+.shortcuts-content {
+    width: 100%;
+}
+
+.shortcuts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-highlight);
+}
+
+.shortcuts-description {
+    color: var(--color-comment);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.btn-reset-all {
+    padding: 8px 16px;
+    background-color: var(--color-danger);
+    color: var(--color-main);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.btn-reset-all:hover {
+    background-color: #d85c66;
+}
+
+.shortcut-error {
+    padding: 12px;
+    background-color: rgba(224, 108, 117, 0.1);
+    border: 1px solid var(--color-danger);
+    border-radius: 4px;
+    color: var(--color-danger);
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+/* Override existing shortcut-item for editable version */
+.shortcuts-content .shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--color-bg);
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.shortcuts-content .shortcut-item:hover {
+    background-color: var(--color-highlight);
+}
+
+.shortcut-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.shortcut-name {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.shortcuts-content .shortcut-description {
+    font-size: 0.85rem;
+    color: var(--color-comment);
+    opacity: 1;
+}
+
+.shortcut-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Override existing shortcut-key for editable version */
+.shortcuts-content .shortcut-key {
+    padding: 6px 12px;
+    background-color: var(--color-main);
+    border: 1px solid var(--color-highlight);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+    text-align: center;
+    opacity: 1;
+}
+
+.shortcuts-content .shortcut-key:hover {
+    border-color: #61afef;
+    background-color: var(--color-highlight);
+}
+
+.shortcut-input {
+    padding: 6px 12px;
+    background-color: var(--color-main);
+    border: 1px solid var(--color-highlight);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    min-width: 120px;
+    text-align: center;
+}
+
+.shortcut-input.recording {
+    border-color: #61afef;
+    background-color: rgba(97, 175, 239, 0.1);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.btn-cancel-shortcut {
+    background: none;
+    border: none;
+    color: var(--color-comment);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-cancel-shortcut:hover {
+    background-color: var(--color-danger);
+    color: var(--color-main);
+}
+
+.btn-reset-shortcut {
+    background: none;
+    border: none;
+    color: var(--color-comment);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 1.2rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-reset-shortcut:hover {
+    background-color: var(--color-highlight);
+    color: var(--color-text);
+}
+
+/* Ensure shortcut categories in editable mode have proper spacing */
+.shortcuts-content .shortcut-category {
+    margin-bottom: 32px;
+}
+
+.shortcuts-content .shortcut-category h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--color-text);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-highlight);
+}
+
+.shortcuts-content .shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

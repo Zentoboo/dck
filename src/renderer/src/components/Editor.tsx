@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { marked } from "marked";
+import { ShortcutManager } from "../utils/ShortcutManager";
 
 interface EditorProps {
     content: string;
@@ -161,50 +162,48 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
     };
 
     const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
-        const isMod = e.ctrlKey || e.metaKey;
-
         // Bold
-        if (isMod && e.key === 'b') {
+        if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.bold')) {
             e.preventDefault();
             wrapSelection('**', '**');
         }
         // Italic
-        else if (isMod && e.key === 'i') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.italic')) {
             e.preventDefault();
             wrapSelection('*', '*');
         }
         // Code
-        else if (isMod && e.key === 'k') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.code')) {
             e.preventDefault();
             wrapSelection('`', '`');
         }
         // Strikethrough
-        else if (isMod && e.key === 'u') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.strikethrough')) {
             e.preventDefault();
             wrapSelection('~~', '~~');
         }
         // Tab - indent
-        else if (e.key === 'Tab' && !e.shiftKey) {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.indent')) {
             e.preventDefault();
             handleIndent(true);
         }
         // Shift+Tab - unindent
-        else if (e.key === 'Tab' && e.shiftKey) {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.unindent')) {
             e.preventDefault();
             handleIndent(false);
         }
         // Heading 1
-        else if (isMod && e.key === '1') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading1')) {
             e.preventDefault();
             addHeading(1);
         }
         // Heading 2
-        else if (isMod && e.key === '2') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading2')) {
             e.preventDefault();
             addHeading(2);
         }
         // Heading 3
-        else if (isMod && e.key === '3') {
+        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading3')) {
             e.preventDefault();
             addHeading(3);
         }

@@ -1,0 +1,70 @@
+/* File Selector - Total count display */
+.file-stats .total-count {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    margin-left: 4px;
+}
+
+/* File Selector - Sort order selector */
+.sort-order-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+}
+
+.sort-order-select span {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.sort-select {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sort-select:hover {
+    border-color: var(--primary-color);
+    background-color: var(--bg-primary);
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(97, 175, 239, 0.2);
+}
+
+/* Card Review - End Session Button */
+.btn-end-session {
+    padding: 8px 16px;
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.btn-end-session:hover {
+    background-color: #e67e22;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-end-session:active {
+    transform: translateY(0);
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}

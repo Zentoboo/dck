@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import FileSelector from './FileSelector';
+import FileSelector, { SortOrder } from './FileSelector';
 import CardReview from './CardReview';
 import SessionComplete from './SessionComplete';
 import { parseMarkdownForFlashcards } from '../utils/flashcardParser';
@@ -103,7 +103,7 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
     setFilesWithStats(stats);
   };
 
-  const handleStartSession = async (studyMode: boolean = false) => {
+  const handleStartSession = async (studyMode: boolean = false, sortOrder: SortOrder = 'random') => {
     const cardsToReview: ReviewCard[] = [];
     setIsStudyMode(studyMode);
 
@@ -135,10 +135,31 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
       });
     }
 
-    // Shuffle cards
-    const shuffled = cardsToReview.sort(() => Math.random() - 0.5);
-    setReviewCards(shuffled);
-    setTotalCardsInSession(shuffled.length);
+    // Sort cards based on selected order
+    let sortedCards = cardsToReview;
+    if (sortOrder === 'random') {
+      sortedCards = cardsToReview.sort(() => Math.random() - 0.5);
+    } else if (sortOrder === 'sequential') {
+      // Keep original order (as they appear in files)
+      sortedCards = cardsToReview;
+    } else if (sortOrder === 'hardest') {
+      // Sort by difficulty: lowest stability (hardest) first
+      sortedCards = cardsToReview.sort((a, b) => {
+        const stabilityA = a.cardData?.state?.stability ?? 0;
+        const stabilityB = b.cardData?.state?.stability ?? 0;
+        return stabilityA - stabilityB;
+      });
+    } else if (sortOrder === 'easiest') {
+      // Sort by difficulty: highest stability (easiest) first
+      sortedCards = cardsToReview.sort((a, b) => {
+        const stabilityA = a.cardData?.state?.stability ?? 0;
+        const stabilityB = b.cardData?.state?.stability ?? 0;
+        return stabilityB - stabilityA;
+      });
+    }
+    
+    setReviewCards(sortedCards);
+    setTotalCardsInSession(sortedCards.length);
     setSessionStart(new Date());
     setSessionState('reviewing');
   };
@@ -281,6 +302,16 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
     setCurrentCardIndex(lastAction.cardIndex);
   };
 
+  const handleEndSession = async () => {
+    // Save the session with the cards reviewed so far
+    if (sessionRecords.length > 0) {
+      await completeSessionWithRecords(sessionRecords);
+    } else {
+      // If no cards were reviewed, just close
+      onClose();
+    }
+  };
+
   const completeSessionWithRecords = async (records: SessionCardRecord[]) => {
     const sessionEnd = new Date();
 
@@ -351,6 +382,7 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
         onSkip={handleSkip}
         onUndo={handleUndo}
         canUndo={undoStack.length > 0}
+        onEndSession={handleEndSession}
       />
     );
   }
@@ -360,7 +392,7 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
     return (
       <SessionComplete
         cardsReviewed={sessionRecords.length}
-        duration={Math.round((new Date().getTime() - sessionStart.getTime()) / 60000)}
+        duration={Math.round((new Date().getTime() - sessionStart.getTime()) / 1000)}
         ratings={ratings}
         onClose={onClose}
       />

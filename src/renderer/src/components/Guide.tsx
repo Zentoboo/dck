@@ -18,12 +18,37 @@ const Guide: React.FC<GuideProps> = ({ onClose, showOnStartup, onDontShowAgain }
                     <br />
                     <h4>Key Features:</h4>
                     <ul>
-                        <li>Write notes in Markdown format</li>
-                        <li>Create flashcards directly in your notes</li>
-                        <li>AI-powered answer evaluation</li>
-                        <li>Spaced repetition using FSRS algorithm</li>
-                        <li>Track your learning progress with statistics</li>
+                        <li><strong>Markdown Notes:</strong> Write notes in Markdown format with full editor support</li>
+                        <li><strong>Inline Flashcards:</strong> Create flashcards directly within your notes</li>
+                        <li><strong>AI-Powered Evaluation:</strong> Get intelligent feedback on your answers</li>
+                        <li><strong>Spaced Repetition:</strong> FSRS algorithm optimizes your learning schedule</li>
+                        <li><strong>Learning Statistics:</strong> Track your progress over time</li>
+                        <li><strong>Customizable Shortcuts:</strong> Personalize keyboard shortcuts to your workflow</li>
                     </ul>
+                </div>
+            )
+        },
+        {
+            title: 'Getting Started',
+            content: (
+                <div>
+                    <h4>Quick Start Guide:</h4>
+                    <ol>
+                        <li><strong>Select a Folder:</strong> Click "Select" in the sidebar to choose a folder for your notes</li>
+                        <li><strong>Create Your First Note:</strong> Click "New" to create a markdown file</li>
+                        <li><strong>Write Flashcards:</strong> Use the Q&A format (explained in next page)</li>
+                        <li><strong>Start Learning:</strong> Click the flashcard icon (📚) to begin a session</li>
+                    </ol>
+                    <br />
+                    <h4>File Organization:</h4>
+                    <p>Use dot notation in filenames to create a hierarchical structure:</p>
+                    <pre className="guide-code">
+                        {`biology.anatomy.md
+biology.cell-structure.md
+chemistry.organic.md
+chemistry.inorganic.md`}
+                    </pre>
+                    <p>This creates a tree structure in the sidebar for easy organization.</p>
                 </div>
             )
         },
@@ -31,77 +56,126 @@ const Guide: React.FC<GuideProps> = ({ onClose, showOnStartup, onDontShowAgain }
             title: 'Creating Flashcards',
             content: (
                 <div>
-                    <p>Flashcards are created using a simple Q&A format in your markdown files:</p>
+                    <p>Flashcards use a simple Q&A format in your markdown files:</p>
                     <br />
-                    <h4>Note Format:</h4>
+                    <h4>Basic Format:</h4>
                     <pre className="guide-code">
-                        {`- What is photosynthesis? (question)
-    - Photosynthesis is ... (answer must be indented)`}
+                        {`- What is photosynthesis?
+    - Photosynthesis is the process by which plants convert 
+      light energy into chemical energy stored in glucose.`}
                     </pre>
-                    <p><strong>Important:</strong> Right after the question, answer must be indented. Any answer whether its code snippet or basic text or list of texts will be considered as answer as long as its indented.</p>
+                    <p><strong>Key Rule:</strong> The answer must be indented (use Tab or spaces) right after the question.</p>
                     <br />
-                    <h4>Flashcard:</h4>
+                    <h4>Multiple Flashcards:</h4>
                     <pre className="guide-code">
-                        {`Q: What is photosynthesis?
-A: Photosynthesis is...`}
+                        {`- What is DNA?
+    - DNA (Deoxyribonucleic Acid) is a molecule that carries 
+      genetic instructions for life.
+
+- What are the four DNA bases?
+    - Adenine (A), Thymine (T), Cytosine (C), and Guanine (G)`}
                     </pre>
                     <br />
+                    <h4>With Code or Lists:</h4>
+                    <pre className="guide-code">
+                        {`- How do you create a list in Python?
+    - \`\`\`python
+      my_list = [1, 2, 3, 4, 5]
+      # or
+      my_list = list(range(1, 6))
+      \`\`\``}
+                    </pre>
                 </div>
             )
         },
         {
-            title: 'Markdown Formatting',
+            title: 'Markdown Editor',
             content: (
                 <div>
-                    <p>You can use standard Markdown formatting in your questions and answers:</p>
+                    <p>The editor supports all standard Markdown formatting:</p>
                     <br />
                     <h4>Text Formatting:</h4>
                     <ul>
-                        <li><strong>Bold:</strong> **text** or Ctrl/Cmd + B</li>
-                        <li><em>Italic:</em> *text* or Ctrl/Cmd + I</li>
-                        <li><code>Inline code:</code> `code` or Ctrl/Cmd + K</li>
-                        <li><del>Strikethrough:</del> ~~text~~ or Ctrl/Cmd + U</li>
+                        <li><strong>Bold:</strong> **text** or <code>Ctrl/Cmd + B</code></li>
+                        <li><em>Italic:</em> *text* or <code>Ctrl/Cmd + I</code></li>
+                        <li><code>Code:</code> `code` or <code>Ctrl/Cmd + K</code></li>
+                        <li><del>Strikethrough:</del> ~~text~~ or <code>Ctrl/Cmd + U</code></li>
                     </ul>
                     <br />
                     <h4>Headings:</h4>
                     <pre className="guide-code">
-                        {`# Heading 1 (Ctrl/Cmd + 1)
-## Heading 2 (Ctrl/Cmd + 2)
-### Heading 3 (Ctrl/Cmd + 3)`}
+                        {`# Heading 1      Ctrl/Cmd + 1
+## Heading 2     Ctrl/Cmd + 2
+### Heading 3    Ctrl/Cmd + 3`}
                     </pre>
                     <br />
-                    <h4>Lists:</h4>
+                    <h4>Lists and Indentation:</h4>
+                    <ul>
+                        <li><strong>Indent:</strong> <code>Tab</code> (increases indentation)</li>
+                        <li><strong>Unindent:</strong> <code>Shift + Tab</code> (decreases indentation)</li>
+                    </ul>
                     <pre className="guide-code">
-                        {`- Item 1
-- Item 2
-  - Nested item (Tab to indent)`}
+                        {`- Main item
+    - Nested item (press Tab)
+        - Deeper nested (press Tab again)`}
                     </pre>
+                    <br />
+                    <h4>Preview Mode:</h4>
+                    <p>Press <code>Ctrl/Cmd + P</code> to toggle preview of your formatted notes.</p>
                 </div>
             )
         },
         {
-            title: 'Using the Application',
+            title: 'Keyboard Shortcuts',
             content: (
                 <div>
-                    <h4>Getting Started:</h4>
-                    <ol>
-                        <li><strong>Select Folder:</strong> Choose a folder containing your markdown files</li>
-                        <li><strong>Create Notes:</strong> Write your notes with Q&A flashcards</li>
-                        <li><strong>Start Learning:</strong> Click the flashcard icon to begin a session</li>
-                    </ol>
-                    <br />
-                    <h4>Header Buttons:</h4>
+                    <h4>Essential Shortcuts:</h4>
                     <ul>
-                        <li><strong>Flashcard (📚):</strong> Start a learning session</li>
-                        <li><strong>Statistics (📊):</strong> View your learning progress</li>
-                        <li><strong>Settings (⚙️):</strong> Configure AI evaluation and view shortcuts</li>
-                        <li><strong>Guide (?):</strong> Open this guide anytime</li>
+                        <li><code>Ctrl/Cmd + S</code> - Save current file</li>
+                        <li><code>Ctrl/Cmd + P</code> - Toggle preview mode</li>
+                        <li><code>Ctrl/Cmd + N</code> - Create new file</li>
+                        <li><code>Ctrl/Cmd + D</code> - Delete current file</li>
+                        <li><code>Ctrl/Cmd + F</code> - Start flashcard session</li>
+                        <li><code>Ctrl/Cmd + E</code> - View statistics</li>
+                        <li><code>Ctrl/Cmd + ,</code> - Open settings</li>
+                        <li><code>Ctrl/Cmd + /</code> - Open this guide</li>
                     </ul>
                     <br />
-                    <h4>Keyboard Shortcuts:</h4>
-                    <p>Press <strong>Ctrl/Cmd + S</strong> to save your work.</p>
-                    <p>Press <strong>Ctrl/Cmd + P</strong> to toggle preview mode.</p>
-                    <p>View all shortcuts in Settings → Keyboard Shortcuts tab.</p>
+                    <h4>Customization:</h4>
+                    <p>You can customize all keyboard shortcuts in <strong>Settings → Keyboard Shortcuts</strong> tab.</p>
+                    <p>Click on any shortcut, then press your desired key combination.</p>
+                    <br />
+                    <h4>Search Feature:</h4>
+                    <p>Use the search box above your notes list to quickly find files by name.</p>
+                </div>
+            )
+        },
+        {
+            title: 'Flashcard Sessions',
+            content: (
+                <div>
+                    <h4>Starting a Session:</h4>
+                    <ol>
+                        <li>Click the flashcard icon (📚) in the header</li>
+                        <li>Search and select which files to include</li>
+                        <li>Click "Start Session" to begin</li>
+                    </ol>
+                    <br />
+                    <h4>Two Review Modes:</h4>
+                    <ul>
+                        <li><strong>Review Mode:</strong> Only shows cards that are due for review based on spaced repetition</li>
+                        <li><strong>Study Mode:</strong> Shows all cards regardless of schedule (good for cramming)</li>
+                    </ul>
+                    <br />
+                    <h4>Saved Decks:</h4>
+                    <p>Save your frequently used file combinations as presets for quick access.</p>
+                    <p>Click the "Save Deck" button when selecting files for a session.</p>
+                    <br />
+                    <h4>Session Controls:</h4>
+                    <ul>
+                        <li><strong>Skip:</strong> Skip the current card (only before viewing answer)</li>
+                        <li><strong>Undo:</strong> Undo your last rating</li>
+                    </ul>
                 </div>
             )
         },
@@ -109,52 +183,87 @@ A: Photosynthesis is...`}
             title: 'AI Evaluation',
             content: (
                 <div>
-                    <p>Enable AI-powered evaluation to get intelligent feedback on your answers:</p>
+                    <p>Get intelligent AI feedback on your flashcard answers:</p>
                     <br />
-                    <h4>Setup:</h4>
+                    <h4>Setup Process:</h4>
                     <ol>
-                        <li>Click the Settings icon (⚙️)</li>
-                        <li>Go to "AI Evaluation" tab</li>
+                        <li>Click Settings icon (⚙️) in the header</li>
+                        <li>Navigate to "AI Evaluation" tab</li>
                         <li>Click "Add Provider"</li>
-                        <li>Enter your API key (Claude or Grok)</li>
-                        <li>Enable AI Evaluation</li>
+                        <li>Select provider (Claude or Grok)</li>
+                        <li>Enter your API key</li>
+                        <li>Enable "AI Evaluation" checkbox</li>
                     </ol>
                     <br />
-                    <h4>How It Works:</h4>
-                    <p>When you answer a flashcard, the AI will:</p>
+                    <h4>AI Feedback Includes:</h4>
                     <ul>
-                        <li>Compare your answer to the correct answer</li>
-                        <li>Evaluate understanding and accuracy</li>
-                        <li>Provide feedback on what you got right/wrong</li>
-                        <li>Help you learn from mistakes</li>
+                        <li><strong>Overall Score:</strong> 0-100% based on answer quality</li>
+                        <li><strong>Accuracy:</strong> How correct your answer is</li>
+                        <li><strong>Completeness:</strong> Whether you covered all key points</li>
+                        <li><strong>Clarity:</strong> How well-structured your response is</li>
+                        <li><strong>Keywords:</strong> Important terms found/missing (highlighted in green)</li>
+                        <li><strong>Suggested Improvements:</strong> Specific ways to improve</li>
+                        <li><strong>Strengths:</strong> What you did well</li>
+                        <li><strong>Suggested Rating:</strong> AI recommendation (Again/Hard/Good/Easy)</li>
                     </ul>
                     <br />
-                    <p><strong>Note:</strong> AI evaluation is optional. You can still use the app with manual self-assessment.</p>
+                    <p><strong>Note:</strong> AI evaluation requires internet connection. You can still use manual ratings without AI.</p>
                 </div>
             )
         },
         {
-            title: 'Spaced Repetition',
+            title: 'Spaced Repetition (FSRS)',
             content: (
                 <div>
-                    <p>dck uses the FSRS (Free Spaced Repetition Scheduler) algorithm to optimize your learning:</p>
+                    <p>dck uses the FSRS algorithm to optimize when you review each card:</p>
+                    <br />
+                    <h4>Card States:</h4>
+                    <ul>
+                        <li><strong>New:</strong> Cards you've never reviewed</li>
+                        <li><strong>Learning:</strong> Cards you're currently learning (short intervals)</li>
+                        <li><strong>Review:</strong> Cards you know well (longer intervals)</li>
+                        <li><strong>Relearning:</strong> Cards you forgot (need to relearn)</li>
+                    </ul>
+                    <br />
+                    <h4>Rating System:</h4>
+                    <ul>
+                        <li><strong>Again (1):</strong> Completely wrong → Card resets, review soon</li>
+                        <li><strong>Hard (2):</strong> Difficult to recall → Shorter interval</li>
+                        <li><strong>Good (3):</strong> Correct answer → Standard interval</li>
+                        <li><strong>Easy (4):</strong> Very easy → Longer interval</li>
+                    </ul>
                     <br />
                     <h4>How It Works:</h4>
+                    <p>The algorithm learns from your ratings and adjusts intervals to show cards right before you're about to forget them - maximizing retention while minimizing review time.</p>
+                </div>
+            )
+        },
+        {
+            title: 'Statistics Dashboard',
+            content: (
+                <div>
+                    <p>Track your learning progress over time:</p>
+                    <br />
+                    <h4>Available Metrics:</h4>
                     <ul>
-                        <li><strong>New cards:</strong> Cards you haven't reviewed yet</li>
-                        <li><strong>Learning:</strong> Cards you're currently learning</li>
-                        <li><strong>Review:</strong> Cards you've learned, shown at optimal intervals</li>
+                        <li><strong>Total Cards:</strong> Number of flashcards across all files</li>
+                        <li><strong>Due Today:</strong> Cards scheduled for review today</li>
+                        <li><strong>Reviewed Today:</strong> Cards you've already reviewed</li>
+                        <li><strong>Retention Rate:</strong> Percentage of cards you remember correctly</li>
+                        <li><strong>Study Streak:</strong> Consecutive days you've studied</li>
+                        <li><strong>Average AI Score:</strong> Your average AI evaluation score</li>
                     </ul>
                     <br />
-                    <h4>Rating Your Answers:</h4>
+                    <h4>File Statistics:</h4>
+                    <p>View detailed stats for each note file including:</p>
                     <ul>
-                        <li><strong>Again:</strong> Didn't remember at all → Review soon</li>
-                        <li><strong>Hard:</strong> Difficult to remember → Shorter interval</li>
-                        <li><strong>Good:</strong> Remembered correctly → Standard interval</li>
-                        <li><strong>Easy:</strong> Very easy to remember → Longer interval</li>
+                        <li>Number of cards per file</li>
+                        <li>Cards by state (New, Learning, Review)</li>
+                        <li>Average ease factor</li>
+                        <li>Review history</li>
                     </ul>
                     <br />
-                    <p>The algorithm adjusts intervals based on your performance to maximize retention!</p>
+                    <p>Click the statistics icon (📊) in the header to view your dashboard.</p>
                 </div>
             )
         },
@@ -164,32 +273,32 @@ A: Photosynthesis is...`}
                 <div>
                     <h4>Best Practices:</h4>
                     <ul>
-                        <li><strong>Keep it simple:</strong> One concept per flashcard</li>
-                        <li><strong>Be specific:</strong> Clear questions get clear answers</li>
-                        <li><strong>Use your own words:</strong> Don't just copy-paste</li>
-                        <li><strong>Review regularly:</strong> Consistency is key to retention</li>
-                        <li><strong>Focus on understanding:</strong> Not just memorization</li>
+                        <li><strong>One Concept Per Card:</strong> Keep flashcards focused on single ideas</li>
+                        <li><strong>Be Specific:</strong> Clear, specific questions get clear answers</li>
+                        <li><strong>Use Your Own Words:</strong> Rephrase concepts in your own understanding</li>
+                        <li><strong>Review Consistently:</strong> Daily reviews are more effective than cramming</li>
+                        <li><strong>Focus on Understanding:</strong> Aim to understand concepts, not just memorize</li>
+                        <li><strong>Use AI Feedback:</strong> Learn from AI suggestions to improve your answers</li>
                     </ul>
                     <br />
-                    <h4>Example Good Flashcard Written on Note (.md):</h4>
+                    <h4>Example Well-Written Flashcard:</h4>
                     <pre className="guide-code">
-                        {`- What are the three main components of a cell?
+                        {`- What are the three main components of a eukaryotic cell?
     - The three main components are:
-        - Cell membrane (outer boundary)
-        - Cytoplasm (gel-like substance)
-        - Nucleus (contains genetic material)`}
+        1. Cell membrane - controls what enters/exits the cell
+        2. Cytoplasm - gel-like substance containing organelles
+        3. Nucleus - contains DNA and controls cell activities`}
                     </pre>
                     <br />
-                    <h4>File Organization:</h4>
-                    <p>Organize your notes by topic through their filenames:</p>
+                    <h4>Organizing Your Notes:</h4>
+                    <p>Structure your files by subject and topic:</p>
                     <pre className="guide-code">
-                        {`biology.anatomy.md
-biology.cell-structure.md
-biology.genetics-basics.md
-biology.dna-rna.md
-biology.evolution-basics.md
-biology.photosynthesis.md`}
+                        {`biology.cell-biology.md
+biology.genetics.md
+chemistry.organic-reactions.md
+physics.mechanics.kinematics.md`}
                     </pre>
+                    <p>This creates a clean hierarchy in your sidebar and helps you create targeted flashcard sessions.</p>
                 </div>
             )
         }
@@ -256,7 +365,7 @@ biology.photosynthesis.md`}
                                     }
                                 }}
                             />
-                            <span>Don't show this again</span>
+                            <span>Don't show this guide on startup</span>
                         </label>
                     )}
                 </div>

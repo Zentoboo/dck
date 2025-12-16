@@ -21,6 +21,7 @@ interface CardReviewProps {
   onSkip: () => void;
   onUndo: () => void;
   canUndo: boolean;
+  onEndSession: () => void;
 }
 
 const CardReview: React.FC<CardReviewProps> = ({
@@ -31,7 +32,8 @@ const CardReview: React.FC<CardReviewProps> = ({
   onReview,
   onSkip,
   onUndo,
-  canUndo
+  canUndo,
+  onEndSession
 }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
@@ -117,6 +119,13 @@ const CardReview: React.FC<CardReviewProps> = ({
               title={showAnswer ? "Cannot skip after viewing answer" : "Skip this card (comes back later)"}
             >
               Skip
+            </button>
+            <button
+              className="btn-end-session"
+              onClick={onEndSession}
+              title="End session now and save progress"
+            >
+              End Session
             </button>
           </div>
         </div>

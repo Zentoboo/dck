@@ -7,6 +7,7 @@ import Settings from "./components/Settings";
 import Guide from "./components/Guide";
 import ConfirmModal from "./components/ConfirmModal";
 import { FolderManager } from "./utils/folderManager";
+import { ShortcutManager } from "./utils/ShortcutManager";
 
 const App: React.FC = () => {
   const [currentFile, setCurrentFile] = useState<string | null>(null);
@@ -27,12 +28,23 @@ const App: React.FC = () => {
   // Modal state for unsaved changes
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [showGuideOnStartup, setShowGuideOnStartup] = useState(false);
 
   // Auto-load last folder on app start
   useEffect(() => {
     const lastFolder = FolderManager.getLastFolder();
     if (lastFolder) {
       setFolderPath(lastFolder.path);
+    }
+  }, []);
+
+  // Check if guide should be shown on startup
+  useEffect(() => {
+    const dontShowGuide = localStorage.getItem('dontShowGuide');
+    if (dontShowGuide !== 'true') {
+      // Show guide on first launch or if user hasn't opted out
+      setShowGuideOnStartup(true);
+      setShowGuide(true);
     }
   }, []);
 
@@ -149,7 +161,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent): Promise<void> => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      // Don't trigger shortcuts when typing in input fields (except editor textarea)
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'SELECT') {
+        return;
+      }
+
+      // Save file (Ctrl/Cmd + S)
+      if (ShortcutManager.matchesShortcut(e, 'editor.save')) {
         e.preventDefault();
         if (currentFile && hasUnsavedChanges) {
           const success = await window.api.writeFile(currentFile, fileContent);
@@ -158,12 +177,81 @@ const App: React.FC = () => {
             console.log('File saved successfully');
           }
         }
+        return;
+      }
+
+      // Toggle preview (Ctrl/Cmd + P)
+      if (ShortcutManager.matchesShortcut(e, 'editor.togglePreview')) {
+        e.preventDefault();
+        if (!showFlashcardSession && !showStatsDashboard && !showSettings && !showGuide) {
+          setIsPreviewMode(prev => !prev);
+        }
+        return;
+      }
+
+      // Open Settings (Ctrl/Cmd + ,)
+      if (ShortcutManager.matchesShortcut(e, 'nav.settings')) {
+        e.preventDefault();
+        setShowSettings(true);
+        setShowGuideOnStartup(false);
+        return;
+      }
+
+      // Open Guide (Ctrl/Cmd + /)
+      if (ShortcutManager.matchesShortcut(e, 'nav.guide')) {
+        e.preventDefault();
+        setShowGuide(true);
+        setShowGuideOnStartup(false);
+        return;
+      }
+
+      // Start flashcard session (Ctrl/Cmd + F)
+      if (ShortcutManager.matchesShortcut(e, 'session.start')) {
+        e.preventDefault();
+        if (folderPath && files.length > 0) {
+          setShowFlashcardSession(true);
+        }
+        return;
+      }
+
+      // View statistics (Ctrl/Cmd + E)
+      if (ShortcutManager.matchesShortcut(e, 'session.stats')) {
+        e.preventDefault();
+        if (folderPath) {
+          setShowStatsDashboard(true);
+        }
+        return;
+      }
+
+      // New file (Ctrl/Cmd + N)
+      if (ShortcutManager.matchesShortcut(e, 'file.new')) {
+        e.preventDefault();
+        if (folderPath) {
+          // Trigger new file creation in sidebar
+          const createBtn = document.querySelector('.create-btn') as HTMLButtonElement;
+          if (createBtn) {
+            createBtn.click();
+          }
+        }
+        return;
+      }
+
+      // Delete file (Ctrl/Cmd + D)
+      if (ShortcutManager.matchesShortcut(e, 'file.delete')) {
+        e.preventDefault();
+        if (currentFile) {
+          const deleteBtn = document.querySelector('.delete-btn') as HTMLButtonElement;
+          if (deleteBtn) {
+            deleteBtn.click();
+          }
+        }
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentFile, fileContent, hasUnsavedChanges]);
+  }, [currentFile, fileContent, hasUnsavedChanges, folderPath, files, showFlashcardSession, showStatsDashboard, showSettings, showGuide, isPreviewMode]);
 
   return (
     <>
@@ -236,6 +324,7 @@ const App: React.FC = () => {
               onClick={() => {
                 console.log('Guide button clicked');
                 setShowGuide(true);
+                setShowGuideOnStartup(false);
                 setShowSettings(false);
                 setShowFlashcardSession(false);
                 setShowStatsDashboard(false);
@@ -308,10 +397,12 @@ const App: React.FC = () => {
               onClose={() => {
                 console.log('Closing Guide');
                 setShowGuide(false);
+                setShowGuideOnStartup(false);
               }}
-              showOnStartup={false}
+              showOnStartup={showGuideOnStartup}
               onDontShowAgain={() => {
-                localStorage.setItem('dck-hide-guide', 'true');
+                localStorage.setItem('dontShowGuide', 'true');
+                setShowGuideOnStartup(false);
               }}
             />
           ) : null}

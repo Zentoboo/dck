@@ -1,6 +1,9 @@
 @import './flashcard.css';
 @import './modal.css';
 @import './folder-selector.css';
+@import './settings.css';
+@import './ai-highlighting.css';
+@import './session-improvements.css';
 
 :root {
     --color-main: #23272e;
@@ -13,6 +16,7 @@
     --color-scrollbar-hover: #3E4552;
     --color-line-highlight: #2C313A;
     --color-line-number: #4B5563;
+    --color-comment: #5C6370;
     --color-success: #98c379;
     --color-danger: #e06c75;
 }
@@ -172,6 +176,7 @@ svg path {
     display: flex;
     align-items: center;
     justify-content: space-around;
+    max-width: 50%;
 }
 
 .action-btn:hover {
@@ -232,9 +237,7 @@ button.create-cancel-btn svg path {
 
 .view-mode-toggle-btn {
     width: 100%;
-    /* Added from the "new" section to ensure it spans the width */
     padding: 6px 12px;
-    /* Used 6px 12px from the later definition */
     background-color: var(--color-bg);
     border: 1px solid var(--color-highlight);
     cursor: pointer;
@@ -256,7 +259,6 @@ button.create-cancel-btn svg path {
     flex-direction: column;
     gap: 8px;
     margin-bottom: 12px;
-    /* Kept from original */
 }
 
 .new-file-input {
@@ -1495,4 +1497,68 @@ button.create-cancel-btn svg path {
 
 .toggle-preview-btn.active:hover {
     background-color: var(--color-selected);
+}
+
+/* Sidebar Search Styles */
+
+.sidebar-search {
+    position: relative;
+    margin-top: 8px;
+}
+
+.sidebar-search-input {
+    width: 100%;
+    padding: 6px 28px 6px 8px;
+    font-size: 0.8rem;
+    background-color: var(--color-main);
+    border: 1px solid var(--color-highlight);
+    outline: none;
+    border-radius: 4px;
+    color: var(--color-text);
+    transition: border-color 0.2s;
+}
+
+.sidebar-search-input:focus {
+    border-color: var(--color-text);
+}
+
+.sidebar-search-input::placeholder {
+    color: var(--color-comment);
+    opacity: 0.6;
+}
+
+.sidebar-search-clear {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-comment);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.sidebar-search-clear:hover {
+    background-color: var(--color-highlight);
+    opacity: 1;
+}
+
+.sidebar-search-clear svg {
+    fill: currentColor;
+}
+
+.search-results-info {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    color: var(--color-comment);
+    background-color: var(--color-main);
+    border-bottom: 1px solid var(--color-highlight);
+    margin-bottom: 4px;
 }

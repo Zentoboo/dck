@@ -27,18 +27,35 @@ const SessionsList: React.FC<SessionsListProps> = ({ folderPath, selectedSession
             const files = await window.api.readMdFiles(sessionsPath);
 
             const sessionFiles: SessionFile[] = files
-                .filter(f => f.name.startsWith('session.'))
+                .filter(f => f.name.startsWith('session'))
                 .map(f => {
-                    const match = f.name.match(/session\.(\d{4}-\d{2}-\d{2}-\d{2}-\d{2})\.md/);
+                    // Support both formats: session.YYYY-MM-DD-HH-MM.md and session-YYYYMMDD-HHMM.md
+                    let match = f.name.match(/session\.(\d{4}-\d{2}-\d{2}-\d{2}-\d{2})\.md/);
                     let timestamp = new Date();
+                    
                     if (match) {
+                        // Old format: session.2025-12-16-14-30.md
                         const year = parseInt(match[1].slice(0, 4));
                         const month = parseInt(match[1].slice(5, 7)) - 1;
                         const day = parseInt(match[1].slice(8, 10));
                         const hour = parseInt(match[1].slice(11, 13));
                         const minute = parseInt(match[1].slice(14, 16));
                         timestamp = new Date(year, month, day, hour, minute);
+                    } else {
+                        // Try new format: session-20251216-1430.md
+                        match = f.name.match(/session-(\d{8})-(\d{4})\.md/);
+                        if (match) {
+                            const dateStr = match[1];
+                            const timeStr = match[2];
+                            const year = parseInt(dateStr.slice(0, 4));
+                            const month = parseInt(dateStr.slice(4, 6)) - 1;
+                            const day = parseInt(dateStr.slice(6, 8));
+                            const hour = parseInt(timeStr.slice(0, 2));
+                            const minute = parseInt(timeStr.slice(2, 4));
+                            timestamp = new Date(year, month, day, hour, minute);
+                        }
                     }
+                    
                     return { name: f.name, path: f.path, timestamp };
                 })
                 .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -67,11 +84,11 @@ const SessionsList: React.FC<SessionsListProps> = ({ folderPath, selectedSession
     };
 
     if (loading) {
-        return <p className="session-loading">Loading...</p>;
+        return <p className="session-loading">Loading sessions...</p>;
     }
 
     if (sessions.length === 0) {
-        return <p className="no-sessions">No sessions yet</p>;
+        return <p className="no-sessions">No sessions yet. Complete a flashcard session to see it here.</p>;
     }
 
     return (
