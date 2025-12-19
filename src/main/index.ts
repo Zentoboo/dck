@@ -162,6 +162,39 @@ app.whenReady().then(() => {
     }
   })
 
+  // NEW: Metrics Export - Select directory
+  ipcMain.handle('metrics:selectExportDirectory', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Export Location',
+        properties: ['openDirectory', 'createDirectory'],
+        buttonLabel: 'Select Folder'
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, canceled: true }
+      }
+
+      return { success: true, path: result.filePaths[0] }
+    } catch (error) {
+      console.error('Error selecting directory:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  // NEW: Metrics Export - Save CSV file
+  ipcMain.handle('metrics:saveCsvFile', async (_event, dirPath: string, content: string, filename: string) => {
+    try {
+      const csvPath = path.join(dirPath, filename)
+      fs.writeFileSync(csvPath, content, 'utf-8')
+      console.log('CSV file saved:', csvPath)
+      return { success: true, path: csvPath }
+    } catch (error) {
+      console.error('Error saving CSV file:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
   createWindow()
 
   app.on('activate', function () {

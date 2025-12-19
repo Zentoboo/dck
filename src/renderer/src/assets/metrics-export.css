@@ -1,0 +1,102 @@
+/* Metrics Export Styles */
+
+.export-info {
+    margin-bottom: 20px;
+}
+
+.export-info p {
+    font-size: 0.9rem;
+}
+
+.export-info ul {
+    font-size: 0.9rem;
+}
+
+.export-info li {
+    margin-bottom: 6px;
+}
+
+.btn-export-metrics {
+    padding: 12px 24px;
+    background-color: var(--color-success);
+    border: none;
+    border-radius: 4px;
+    color: var(--color-main);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+}
+
+.btn-export-metrics:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(152, 195, 121, 0.3);
+}
+
+.btn-export-metrics:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-export-metrics:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-export-metrics svg {
+    flex-shrink: 0;
+}
+
+/* Spinning animation for loading state */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+/* Export status messages */
+.export-status {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.export-status svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.export-status-success {
+    background-color: rgba(152, 195, 121, 0.15);
+    border: 1px solid rgba(152, 195, 121, 0.3);
+    color: var(--color-success);
+}
+
+.export-status-error {
+    background-color: rgba(224, 108, 117, 0.15);
+    border: 1px solid rgba(224, 108, 117, 0.3);
+    color: var(--color-danger);
+}
+
+.export-status-info {
+    background-color: rgba(97, 175, 239, 0.15);
+    border: 1px solid rgba(97, 175, 239, 0.3);
+    color: #61afef;
+}

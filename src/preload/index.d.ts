@@ -11,6 +11,13 @@ interface CreateFileResult {
   error?: string
 }
 
+interface ExportDirectoryResult {
+  success: boolean
+  path?: string
+  canceled?: boolean
+  error?: string
+}
+
 interface API {
   selectFolder: () => Promise<string | null>
   readMdFiles: (folderPath: string) => Promise<FileItem[]>
@@ -21,6 +28,8 @@ interface API {
   readFlashcardFile: (mdFilePath: string) => Promise<any>
   writeFlashcardFile: (mdFilePath: string, data: any) => Promise<boolean>
   saveSession: (folderPath: string, filename: string, content: string) => Promise<CreateFileResult>
+  selectExportDirectory: () => Promise<ExportDirectoryResult>
+  saveCsvFile: (dirPath: string, content: string, filename: string) => Promise<CreateFileResult>
 }
 
 declare global {

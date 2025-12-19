@@ -10,7 +10,9 @@ const api = {
   deleteFile: (filePath: string) => ipcRenderer.invoke('fs:deleteFile', filePath),
   readFlashcardFile: (mdFilePath: string) => ipcRenderer.invoke('flashcard:readFlashcardFile', mdFilePath),
   writeFlashcardFile: (mdFilePath: string, data: any) => ipcRenderer.invoke('flashcard:writeFlashcardFile', mdFilePath, data),
-  saveSession: (folderPath: string, filename: string, content: string) => ipcRenderer.invoke('flashcard:saveSession', folderPath, filename, content)
+  saveSession: (folderPath: string, filename: string, content: string) => ipcRenderer.invoke('flashcard:saveSession', folderPath, filename, content),
+  selectExportDirectory: () => ipcRenderer.invoke('metrics:selectExportDirectory'),
+  saveCsvFile: (dirPath: string, content: string, filename: string) => ipcRenderer.invoke('metrics:saveCsvFile', dirPath, content, filename)
 }
 
 if (process.contextIsolated) {

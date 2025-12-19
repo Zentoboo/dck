@@ -123,9 +123,9 @@ const CardReview: React.FC<CardReviewProps> = ({
             <button
               className="btn-end-session"
               onClick={onEndSession}
-              title="End session now and save progress"
+              title="End session and save progress"
             >
-              End Session
+              End
             </button>
           </div>
         </div>

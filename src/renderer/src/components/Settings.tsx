@@ -4,13 +4,15 @@ import { reloadAIEvaluator } from '../ai/AIEvaluator';
 import { ShortcutManager, ShortcutAction } from '../utils/ShortcutManager';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
+import MetricsExport from './MetricsExport';
 
 interface SettingsProps {
+    folderPath: string;
     onClose: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onClose }) => {
-    const [activeTab, setActiveTab] = useState<'ai' | 'shortcuts'>('ai');
+const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
+    const [activeTab, setActiveTab] = useState<'ai' | 'shortcuts' | 'export'>('ai');
 
     // AI Settings state
     const [enabled, setEnabled] = useState(false);
@@ -244,6 +246,12 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         >
                             Keyboard Shortcuts
                         </button>
+                        <button
+                            className={`settings-tab ${activeTab === 'export' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('export')}
+                        >
+                            Export Data
+                        </button>
                     </div>
 
                     <div className="modal-content">
@@ -367,7 +375,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                                     )}
                                 </div>
                             </div>
-                        ) : (
+                        ) : activeTab === 'shortcuts' ? (
                             <div className="settings-content shortcuts-content">
                                 <div className="shortcuts-header">
                                     <p className="shortcuts-description">
@@ -421,7 +429,7 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <kbd 
+                                                                    <kbd
                                                                         className="shortcut-key"
                                                                         onClick={() => handleEditShortcut(shortcut.id)}
                                                                         title="Click to edit"
@@ -446,6 +454,10 @@ const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                                         </div>
                                     )
                                 ))}
+                            </div>
+                        ) : (
+                            <div className="settings-content">
+                                <MetricsExport folderPath={folderPath} />
                             </div>
                         )}
                     </div>

@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [fileToDelete, setFileToDelete] = useState<string>("");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [sessionsRefreshKey, setSessionsRefreshKey] = useState(0);
 
     useEffect(() => {
         if (folderPath) {
@@ -88,6 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 await loadFiles(folderPath);
             }
             onDeleteFile();
+            setSessionsRefreshKey(prev => prev + 1);
         } else {
             alert('Failed to delete file');
         }
@@ -105,13 +106,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     const folderName = folderPath ? folderPath.split('/').pop() || folderPath : "No folder selected";
-
-    // Filter files based on search query
-    const filteredFiles = searchQuery.trim()
-        ? files.filter(file =>
-            file.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : files;
 
     return (
         <>
@@ -219,50 +213,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                             </div>
                         </div>
                     )}
-
-                    {/* Search Input - Only show in notes mode when there are files */}
-                    {folderPath && viewMode === 'notes' && files.length > 0 && !isCreating && (
-                        <div className="sidebar-search">
-                            <input
-                                type="text"
-                                className="sidebar-search-input"
-                                placeholder="Search notes..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <button
-                                    className="sidebar-search-clear"
-                                    onClick={() => setSearchQuery('')}
-                                    title="Clear search"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24">
-                                        <path d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                    )}
                 </div>
 
                 <div className="sidebar-content">
                     {viewMode === 'notes' ? (
                         <>
-                            {filteredFiles.length > 0 ? (
-                                <>
-                                    {searchQuery && (
-                                        <div className="search-results-info">
-                                            {filteredFiles.length} of {files.length} notes
-                                        </div>
-                                    )}
-                                    <FileTree
-                                        files={filteredFiles}
-                                        onFileClick={onFileSelect}
-                                        selectedFile={selectedFile}
-                                    />
-                                </>
-                            ) : files.length > 0 && searchQuery ? (
-                                <p className="no-files">No notes match "{searchQuery}"</p>
+                            {files.length > 0 ? (
+                                <FileTree
+                                    files={files}
+                                    onFileClick={onFileSelect}
+                                    selectedFile={selectedFile}
+                                />
                             ) : (
                                 <p className="no-files">No markdown files found</p>
                             )}
@@ -271,6 +232,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="sessions-content">
                             {folderPath ? (
                                 <SessionsList
+                                    key={sessionsRefreshKey}
                                     folderPath={folderPath}
                                     selectedSession={currentFile}
                                     onSessionSelect={(path: string) => {

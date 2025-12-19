@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import { marked } from "marked";
-import { ShortcutManager } from "../utils/ShortcutManager";
 
 interface EditorProps {
     content: string;
@@ -24,8 +23,11 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
     onTogglePreview
 }, ref) => {
     const [currentLine, setCurrentLine] = useState(1);
+    const [visualLineNumbers, setVisualLineNumbers] = useState<JSX.Element[]>([]);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lineNumbersRef = useRef<HTMLDivElement>(null);
+    const measureRef = useRef<HTMLDivElement>(null);
+    const resizeTimeoutRef = useRef<NodeJS.Timeout>();
 
     useImperativeHandle(ref, () => ({
         focus: () => {
@@ -37,6 +39,75 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
 
     const lines = content.split('\n');
     const lineCount = lines.length;
+
+    // Calculate visual line numbers accounting for text wrapping
+    const calculateVisualLineNumbers = useCallback(() => {
+        if (!textareaRef.current || !measureRef.current) {
+            console.log('Missing refs, skipping calculation');
+            return;
+        }
+
+        const textarea = textareaRef.current;
+        const measureDiv = measureRef.current;
+
+        // Get computed styles from textarea
+        const styles = window.getComputedStyle(textarea);
+        const lineHeight = parseFloat(styles.lineHeight);
+        const paddingLeft = parseFloat(styles.paddingLeft);
+        const paddingRight = parseFloat(styles.paddingRight);
+        const width = textarea.clientWidth - paddingLeft - paddingRight;
+
+        if (width <= 0 || lineHeight <= 0) {
+            console.log('Invalid dimensions, skipping calculation');
+            return;
+        }
+
+        // Apply same styles to measure div
+        measureDiv.style.font = styles.font;
+        measureDiv.style.fontSize = styles.fontSize;
+        measureDiv.style.fontFamily = styles.fontFamily;
+        measureDiv.style.lineHeight = styles.lineHeight;
+        measureDiv.style.letterSpacing = styles.letterSpacing;
+        measureDiv.style.wordSpacing = styles.wordSpacing;
+        measureDiv.style.width = `${width}px`;
+        measureDiv.style.whiteSpace = 'pre-wrap';
+        measureDiv.style.wordWrap = 'break-word';
+        measureDiv.style.overflowWrap = 'break-word';
+
+        const lineElements: JSX.Element[] = [];
+        const logicalLines = content.split('\n');
+
+        logicalLines.forEach((line, logicalIndex) => {
+            // Measure this line
+            measureDiv.textContent = line || ' '; // Empty lines need space
+            const height = measureDiv.offsetHeight;
+            const visualLines = Math.max(1, Math.round(height / lineHeight));
+
+            // First visual line shows the line number
+            lineElements.push(
+                <div
+                    key={`${logicalIndex}-0`}
+                    className={`line-number ${logicalIndex + 1 === currentLine ? 'current' : ''}`}
+                    style={{ height: `${lineHeight}px` }}
+                >
+                    {logicalIndex + 1}
+                </div>
+            );
+
+            // Additional visual lines (wrapped) are empty
+            for (let i = 1; i < visualLines; i++) {
+                lineElements.push(
+                    <div
+                        key={`${logicalIndex}-${i}`}
+                        className="line-number line-number-wrapped"
+                        style={{ height: `${lineHeight}px` }}
+                    />
+                );
+            }
+        });
+
+        setVisualLineNumbers(lineElements);
+    }, [content, currentLine]); // Add dependencies
 
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         onChange(e.target.value);
@@ -162,48 +233,50 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
     };
 
     const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+        const isMod = e.ctrlKey || e.metaKey;
+
         // Bold
-        if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.bold')) {
+        if (isMod && e.key === 'b') {
             e.preventDefault();
             wrapSelection('**', '**');
         }
         // Italic
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.italic')) {
+        else if (isMod && e.key === 'i') {
             e.preventDefault();
             wrapSelection('*', '*');
         }
         // Code
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.code')) {
+        else if (isMod && e.key === 'k') {
             e.preventDefault();
             wrapSelection('`', '`');
         }
         // Strikethrough
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.strikethrough')) {
+        else if (isMod && e.key === 'u') {
             e.preventDefault();
             wrapSelection('~~', '~~');
         }
         // Tab - indent
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.indent')) {
+        else if (e.key === 'Tab' && !e.shiftKey) {
             e.preventDefault();
             handleIndent(true);
         }
         // Shift+Tab - unindent
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.unindent')) {
+        else if (e.key === 'Tab' && e.shiftKey) {
             e.preventDefault();
             handleIndent(false);
         }
         // Heading 1
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading1')) {
+        else if (isMod && e.key === '1') {
             e.preventDefault();
             addHeading(1);
         }
         // Heading 2
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading2')) {
+        else if (isMod && e.key === '2') {
             e.preventDefault();
             addHeading(2);
         }
         // Heading 3
-        else if (ShortcutManager.matchesShortcut(e.nativeEvent as KeyboardEvent, 'editor.heading3')) {
+        else if (isMod && e.key === '3') {
             e.preventDefault();
             addHeading(3);
         }
@@ -224,9 +297,42 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
         }
     };
 
+    // Recalculate visual line numbers when content or currentLine changes
     useEffect(() => {
-        updateCurrentLine();
-    }, [content]);
+        calculateVisualLineNumbers();
+    }, [calculateVisualLineNumbers]);
+
+    // Handle window resize with debounce
+    useEffect(() => {
+        const handleResize = () => {
+            // Clear any pending timeout
+            if (resizeTimeoutRef.current) {
+                clearTimeout(resizeTimeoutRef.current);
+            }
+
+            // Wait for layout to settle, then recalculate
+            resizeTimeoutRef.current = setTimeout(() => {
+                // Use requestAnimationFrame to ensure DOM has updated
+                requestAnimationFrame(() => {
+                    calculateVisualLineNumbers();
+                });
+            }, 150); // 150ms debounce
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Initial calculation after mount
+        setTimeout(() => {
+            calculateVisualLineNumbers();
+        }, 100);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            if (resizeTimeoutRef.current) {
+                clearTimeout(resizeTimeoutRef.current);
+            }
+        };
+    }, [calculateVisualLineNumbers]);
 
     const renderMarkdown = (): string => {
         try {
@@ -291,14 +397,7 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
             </div>
             <div className="editor-container">
                 <div className="line-numbers" ref={lineNumbersRef}>
-                    {Array.from({ length: lineCount }, (_, i) => (
-                        <div
-                            key={i + 1}
-                            className={`line-number ${i + 1 === currentLine ? 'current' : ''}`}
-                        >
-                            {i + 1}
-                        </div>
-                    ))}
+                    {visualLineNumbers}
                 </div>
                 <div className="editor-textarea-wrapper">
                     <textarea
@@ -314,6 +413,18 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
                         placeholder="Start typing..."
                     />
                 </div>
+                {/* Hidden div for measuring text */}
+                <div
+                    ref={measureRef}
+                    className="line-measure"
+                    style={{
+                        position: 'absolute',
+                        visibility: 'hidden',
+                        pointerEvents: 'none',
+                        top: '-9999px',
+                        left: '-9999px'
+                    }}
+                />
             </div>
         </main>
     );

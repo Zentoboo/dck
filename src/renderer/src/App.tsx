@@ -210,6 +210,9 @@ const App: React.FC = () => {
         e.preventDefault();
         if (folderPath && files.length > 0) {
           setShowFlashcardSession(true);
+          setShowStatsDashboard(false);
+          setShowSettings(false);
+          setShowGuide(false);
         }
         return;
       }
@@ -219,6 +222,9 @@ const App: React.FC = () => {
         e.preventDefault();
         if (folderPath) {
           setShowStatsDashboard(true);
+          setShowFlashcardSession(false);
+          setShowSettings(false);
+          setShowGuide(false);
         }
         return;
       }
@@ -387,6 +393,7 @@ const App: React.FC = () => {
             />
           ) : showSettings ? (
             <Settings
+              folderPath={folderPath || ''}
               onClose={() => {
                 console.log('Closing Settings');
                 setShowSettings(false);

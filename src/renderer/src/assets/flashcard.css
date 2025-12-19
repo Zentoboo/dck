@@ -60,7 +60,7 @@
 
 .modal-content {
     flex: 1;
-    padding: 32px 48px;
+    padding: 16px 32px;
     overflow-y: auto;
     width: 100%;
     max-width: 100%;
@@ -130,7 +130,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 400px;
+    max-height: auto;
     overflow-y: auto;
 }
 
@@ -284,7 +284,8 @@
 }
 
 .btn-undo,
-.btn-skip {
+.btn-skip,
+.btn-end-session {
     padding: 4px 12px;
     font-size: 0.85rem;
     background-color: var(--color-bg);
@@ -294,7 +295,8 @@
 }
 
 .btn-undo:hover:not(:disabled),
-.btn-skip:hover:not(:disabled) {
+.btn-skip:hover:not(:disabled),
+.btn-end-session:hover {
     background-color: var(--color-highlight);
 }
 
@@ -310,6 +312,15 @@
 
 .btn-skip:hover:not(:disabled) {
     background-color: #e5c07b;
+    color: var(--color-main);
+}
+
+.btn-end-session {
+    border-color: #e06c75;
+}
+
+.btn-end-session:hover {
+    background-color: #e06c75;
     color: var(--color-main);
 }
 
@@ -573,6 +584,8 @@
 
 .btn-show-answer {
     flex: 1;
+    width: 100%;
+    font-size: 1.1rem;
 }
 
 /* AI Error Box */
@@ -874,6 +887,7 @@
     background-color: var(--color-highlight);
 }
 
+/* Question and Answer Sections */
 .question-section {
     margin-bottom: 24px;
 }
@@ -983,11 +997,11 @@
 }
 
 .btn-again {
-    border-color: var(--color-danger);
+    border-color: #e06c75;
 }
 
 .btn-again:hover {
-    background-color: var(--color-danger);
+    background-color: #e06c75;
     color: var(--color-main);
 }
 
@@ -1001,20 +1015,20 @@
 }
 
 .btn-good {
-    border-color: var(--color-success);
+    border-color: #61afef;
 }
 
 .btn-good:hover {
-    background-color: var(--color-success);
+    background-color: #61afef;
     color: var(--color-main);
 }
 
 .btn-easy {
-    border-color: #61afef;
+    border-color: #98c379;
 }
 
 .btn-easy:hover {
-    background-color: #61afef;
+    background-color: #98c379;
     color: var(--color-main);
 }
 
@@ -1139,11 +1153,6 @@
     cursor: not-allowed;
 }
 
-.btn-show-answer {
-    width: 100%;
-    font-size: 1.1rem;
-}
-
 .btn-cancel {
     padding: 10px 20px;
     background-color: var(--color-bg);
@@ -1194,20 +1203,8 @@
     border-color: var(--color-danger);
 }
 
-.stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--color-success);
-    margin-bottom: 8px;
-}
-
 .highlight-due .stat-value {
     color: var(--color-danger);
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    opacity: 0.8;
 }
 
 .card-distribution {

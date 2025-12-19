@@ -4,6 +4,7 @@
 @import './settings.css';
 @import './ai-highlighting.css';
 @import './session-improvements.css';
+@import './metrics-export.css';
 
 :root {
     --color-main: #23272e;
@@ -148,7 +149,6 @@ svg path {
     transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0;
     white-space: nowrap;
-    /* Kept from original */
 }
 
 .select-folder-btn:hover {
@@ -547,10 +547,20 @@ button.create-cancel-btn svg path {
     fill: var(--color-main);
 }
 
+.toggle-preview-btn.active {
+    background-color: var(--color-selected);
+    opacity: 1;
+}
+
+.toggle-preview-btn.active:hover {
+    background-color: var(--color-selected);
+}
+
 .editor-container {
     flex: 1;
     display: flex;
     overflow: hidden;
+    position: relative;
 }
 
 .line-numbers {
@@ -568,13 +578,19 @@ button.create-cancel-btn svg path {
 }
 
 .line-number {
-    height: 1.6em;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .line-number.current {
     color: var(--color-text);
     font-weight: 800;
     transform: translateX(-6px);
+}
+
+.line-number-wrapped {
+    /* Empty line numbers for wrapped text */
 }
 
 .editor-textarea-wrapper {
@@ -598,6 +614,21 @@ button.create-cancel-btn svg path {
     background-color: var(--color-main);
     font-size: 0.85rem;
     overflow-y: auto;
+
+    /* Enable text wrapping */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-x: hidden;
+}
+
+/* Hidden measurement div */
+.line-measure {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+    top: -9999px;
+    left: -9999px;
 }
 
 .markdown-preview {
@@ -753,13 +784,11 @@ button.create-cancel-btn svg path {
     color: var(--color-text);
     min-width: 28px;
     opacity: 0.7;
-
     font-size: 0.75rem;
 }
 
 .session-list-item.selected .session-number {
     opacity: 1;
-
     font-size: 0.75rem;
 }
 
@@ -781,7 +810,8 @@ button.create-cancel-btn svg path {
 .collapsible-sidebar-content::-webkit-scrollbar,
 .sidebar-content::-webkit-scrollbar,
 .text-editor::-webkit-scrollbar,
-.markdown-preview::-webkit-scrollbar {
+.markdown-preview::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
     width: 8px;
 }
 
@@ -789,29 +819,37 @@ button.create-cancel-btn svg path {
 .sidebar-content::-webkit-scrollbar-track,
 .text-editor::-webkit-scrollbar-track,
 .markdown-preview::-webkit-scrollbar-track {
-    background: var(--color-scrollbar);
+    background: var(--color-bg);
 }
 
 .collapsible-sidebar-content::-webkit-scrollbar-thumb,
 .sidebar-content::-webkit-scrollbar-thumb,
 .text-editor::-webkit-scrollbar-thumb,
-.markdown-preview::-webkit-scrollbar-thumb {
-    background-color: var(--color-scrollbar-hover);
+.markdown-preview::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+    background-color: var(--color-scrollbar);
+    border-radius: 4px;
     transition: background-color 0.2s;
 }
 
 .collapsible-sidebar-content::-webkit-scrollbar-thumb:hover,
 .sidebar-content::-webkit-scrollbar-thumb:hover,
 .text-editor::-webkit-scrollbar-thumb:hover,
-.markdown-preview::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-highlight);
+.markdown-preview::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-scrollbar-hover);
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background-color: var(--color-main);
 }
 
 /* === SETTINGS TABS === */
 .settings-tabs {
     display: flex;
     border-bottom: 1px solid var(--color-highlight);
-    padding: 0 20px;
+    padding: 0 32px;
+    width: 100%;
 }
 
 .settings-tab {
@@ -838,28 +876,9 @@ button.create-cancel-btn svg path {
 
 /* === SETTINGS CONTENT === */
 .settings-content {
-    max-width: 800px;
+    width: 100%;
+    max-width: 100%;
 }
-
-/* === KEYBOARD SHORTCUTS === */
-
-
-
-
-
-
-
-
-
-
-
-
-/* === CLOSE BUTTON IN MODAL HEADER === */
-
-
-
-
-
 
 /* === AI PROVIDER ITEMS (Match Saved Deck Styling) === */
 
@@ -1093,7 +1112,6 @@ button.create-cancel-btn svg path {
 }
 
 /* === MODAL CONSISTENCY FIX === */
-/* Ensure FlashcardSession, Statistics, and Settings all look similar */
 
 /* Base Modal Structure (All Modals) */
 .flashcard-session-container {
@@ -1153,16 +1171,7 @@ button.create-cancel-btn svg path {
 }
 
 /* Modal Content (All Modals) */
-.modal-content {
-    flex: 1;
-    padding: 32px;
-    overflow-y: auto;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-}
 
-/* Ensure content doesn't get constrained */
 .modal-content>* {
     max-width: 100%;
 }
@@ -1177,43 +1186,7 @@ button.create-cancel-btn svg path {
     align-items: center;
 }
 
-/* Settings Tabs - Full Width */
-.settings-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--color-highlight);
-    padding: 0 32px;
-    width: 100%;
-}
-
-.settings-tab {
-    padding: 12px 24px;
-    background: none;
-    border: none;
-    color: var(--color-text);
-    opacity: 0.6;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-}
-
-.settings-tab:hover {
-    opacity: 0.8;
-}
-
-.settings-tab.active {
-    opacity: 1;
-    border-bottom-color: var(--color-text);
-}
-
-/* Settings Content - Full Width */
-.settings-content {
-    width: 100%;
-    max-width: 100%;
-}
-
-/* Stats Modal Specific - Remove max-width constraint */
+/* Stats Modal Specific */
 .stats-modal .modal-content {
     padding: 32px;
 }
@@ -1283,24 +1256,6 @@ button.create-cancel-btn svg path {
     flex-direction: column;
     gap: 8px;
     width: 100%;
-}
-
-/* Ensure scrollbar styling is consistent */
-.modal-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-    background-color: var(--color-main);
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-    background-color: var(--color-scrollbar);
-    border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-scrollbar-hover);
 }
 
 /* === KEYBOARD SHORTCUTS WITH CATEGORIES === */
@@ -1486,17 +1441,6 @@ button.create-cancel-btn svg path {
 
 .dont-show-again:hover {
     opacity: 1;
-}
-
-/* === ACTIVE BUTTON STATE === */
-
-.toggle-preview-btn.active {
-    background-color: var(--color-selected);
-    opacity: 1;
-}
-
-.toggle-preview-btn.active:hover {
-    background-color: var(--color-selected);
 }
 
 /* Sidebar Search Styles */
