@@ -23,11 +23,11 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
     onTogglePreview
 }, ref) => {
     const [currentLine, setCurrentLine] = useState(1);
-    const [visualLineNumbers, setVisualLineNumbers] = useState<JSX.Element[]>([]);
+    const [visualLineNumbers, setVisualLineNumbers] = useState<React.ReactElement[]>([]);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lineNumbersRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLDivElement>(null);
-    const resizeTimeoutRef = useRef<NodeJS.Timeout>();
+    const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useImperativeHandle(ref, () => ({
         focus: () => {
@@ -37,8 +37,8 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
         }
     }));
 
-    const lines = content.split('\n');
-    const lineCount = lines.length;
+    // const lines = content.split('\n');
+    // const lineCount = lines.length;
 
     // Calculate visual line numbers accounting for text wrapping
     const calculateVisualLineNumbers = useCallback(() => {
@@ -74,7 +74,7 @@ const Editor = forwardRef<EditorRef, EditorProps>(({
         measureDiv.style.wordWrap = 'break-word';
         measureDiv.style.overflowWrap = 'break-word';
 
-        const lineElements: JSX.Element[] = [];
+        const lineElements: React.ReactElement[] = [];
         const logicalLines = content.split('\n');
 
         logicalLines.forEach((line, logicalIndex) => {

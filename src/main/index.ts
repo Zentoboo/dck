@@ -178,7 +178,7 @@ app.whenReady().then(() => {
       return { success: true, path: result.filePaths[0] }
     } catch (error) {
       console.error('Error selecting directory:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
   })
 
@@ -191,7 +191,7 @@ app.whenReady().then(() => {
       return { success: true, path: csvPath }
     } catch (error) {
       console.error('Error saving CSV file:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
     }
   })
 

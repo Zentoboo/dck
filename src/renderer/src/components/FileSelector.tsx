@@ -1,5 +1,5 @@
 import React from 'react';
-import { DeckManager, SavedDeck } from '../utils/DeckManager';
+import { DeckManager, SavedDeck } from '../utils/deckManager';
 
 interface FileWithStats {
   name: string;

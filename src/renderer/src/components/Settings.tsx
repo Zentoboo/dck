@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AIConfigManager, SavedProvider } from '../ai/AIConfigManager';
 import { reloadAIEvaluator } from '../ai/AIEvaluator';
-import { ShortcutManager, ShortcutAction } from '../utils/ShortcutManager';
+import { ShortcutManager, ShortcutAction } from '../utils/shortcutManager';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 import MetricsExport from './MetricsExport';
@@ -27,7 +27,8 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
     const [showSaveAlert, setShowSaveAlert] = useState(false);
 
     // Shortcuts state
-    const [shortcuts, setShortcuts] = useState<ShortcutAction[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_shortcuts, setShortcuts] = useState<ShortcutAction[]>([]);
     const [editingShortcut, setEditingShortcut] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [conflictError, setConflictError] = useState<string | null>(null);

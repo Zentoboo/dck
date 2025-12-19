@@ -36,15 +36,15 @@ function getRatingText(rating: Rating): string {
   }
 }
 
-function getRatingLevel(rating: Rating): string {
-  switch (rating) {
-    case Rating.Again: return '1';
-    case Rating.Hard: return '2';
-    case Rating.Good: return '3';
-    case Rating.Easy: return '4';
-    default: return '0';
-  }
-}
+// function getRatingLevel(rating: Rating): string {
+//   switch (rating) {
+//     case Rating.Again: return '1';
+//     case Rating.Hard: return '2';
+//     case Rating.Good: return '3';
+//     case Rating.Easy: return '4';
+//     default: return '0';
+//   }
+// }
 
 export function generateSessionMarkdown(
   summary: SessionSummary,

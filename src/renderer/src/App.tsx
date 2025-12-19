@@ -7,7 +7,7 @@ import Settings from "./components/Settings";
 import Guide from "./components/Guide";
 import ConfirmModal from "./components/ConfirmModal";
 import { FolderManager } from "./utils/folderManager";
-import { ShortcutManager } from "./utils/ShortcutManager";
+import { ShortcutManager } from "./utils/shortcutManager";
 
 const App: React.FC = () => {
   const [currentFile, setCurrentFile] = useState<string | null>(null);

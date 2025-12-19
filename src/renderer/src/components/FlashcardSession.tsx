@@ -145,19 +145,19 @@ const FlashcardSession: React.FC<FlashcardSessionProps> = ({ folderPath, files, 
     } else if (sortOrder === 'hardest') {
       // Sort by difficulty: lowest stability (hardest) first
       sortedCards = cardsToReview.sort((a, b) => {
-        const stabilityA = a.cardData?.state?.stability ?? 0;
-        const stabilityB = b.cardData?.state?.stability ?? 0;
+        const stabilityA = a.cardData?.fsrs?.stability ?? 0;
+        const stabilityB = b.cardData?.fsrs?.stability ?? 0;
         return stabilityA - stabilityB;
       });
     } else if (sortOrder === 'easiest') {
       // Sort by difficulty: highest stability (easiest) first
       sortedCards = cardsToReview.sort((a, b) => {
-        const stabilityA = a.cardData?.state?.stability ?? 0;
-        const stabilityB = b.cardData?.state?.stability ?? 0;
+        const stabilityA = a.cardData?.fsrs?.stability ?? 0;
+        const stabilityB = b.cardData?.fsrs?.stability ?? 0;
         return stabilityB - stabilityA;
       });
     }
-    
+
     setReviewCards(sortedCards);
     setTotalCardsInSession(sortedCards.length);
     setSessionStart(new Date());

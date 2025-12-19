@@ -23,6 +23,8 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
+  // @ts-ignore - legacy fallback
   window.electron = electronAPI
+  // @ts-ignore - legacy fallback
   window.api = api
 }

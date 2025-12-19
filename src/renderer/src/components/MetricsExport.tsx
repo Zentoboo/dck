@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateMetricsExport } from '../utils/MetricsAnalyzer';
+import { generateMetricsExport } from '../utils/metricsAnalyzer';
 
 interface MetricsExportProps {
     folderPath: string;
@@ -29,7 +29,7 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
             const { summary, sessions } = await generateMetricsExport(folderPath);
 
             // Ask user where to save
-            const result = await window.api.selectExportDirectory();
+            const result = await (window as any).api.selectExportDirectory();
 
             if (result.canceled) {
                 setExportStatus({ type: null, message: '' });
@@ -49,8 +49,8 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
             const summaryFilename = `performance-summary-${dateStr}.csv`;
             const sessionsFilename = `sessions-detail-${dateStr}.csv`;
 
-            await window.api.saveCsvFile(result.path, summary, summaryFilename);
-            await window.api.saveCsvFile(result.path, sessions, sessionsFilename);
+            await (window as any).api.saveCsvFile(result.path, summary, summaryFilename);
+            await (window as any).api.saveCsvFile(result.path, sessions, sessionsFilename);
 
             setExportStatus({
                 type: 'success',
@@ -60,7 +60,7 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
             console.error('Export error:', error);
             setExportStatus({
                 type: 'error',
-                message: `Export failed: ${error.message}`
+                message: `Export failed: ${error instanceof Error ? error.message : String(error)}`
             });
         } finally {
             setIsExporting(false);

@@ -30,7 +30,7 @@ interface OverallStats {
     retentionRate: number;
 }
 
-const StatsDashboard: React.FC<StatsProps> = ({ folderPath, files, onClose }) => {
+const StatsDashboard: React.FC<StatsProps> = ({ files, onClose }) => {
     const [overallStats, setOverallStats] = useState<OverallStats | null>(null);
     const [fileStats, setFileStats] = useState<FileStats[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ const StatsDashboard: React.FC<StatsProps> = ({ folderPath, files, onClose }) =>
         let reviewCards = 0;
 
         const fileStatsArray: FileStats[] = [];
-        const today = new Date();
+        // const today = new Date();
 
         for (const file of files) {
             console.log('Processing file:', file.name);

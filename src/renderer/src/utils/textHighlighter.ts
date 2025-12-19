@@ -20,8 +20,8 @@ export function highlightKeywordsInText(
   }
 
   const segments: HighlightSegment[] = [];
-  let remainingText = text;
-  let searchStart = 0;
+  // let remainingText = text;
+  // let searchStart = 0;
 
   // Sort keywords by length (longest first) to match longer phrases first
   const sortedKeywords = [...foundKeywords].sort((a, b) => b.length - a.length);
