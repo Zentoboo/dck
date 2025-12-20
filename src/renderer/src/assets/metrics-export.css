@@ -17,7 +17,7 @@
 }
 
 .btn-export-metrics {
-    padding: 12px 24px;
+    padding: 12px 12px;
     background-color: var(--color-success);
     border: none;
     border-radius: 4px;
@@ -25,7 +25,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -34,7 +34,6 @@
 
 .btn-export-metrics:hover:not(:disabled) {
     opacity: 0.9;
-    transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(152, 195, 121, 0.3);
 }
 

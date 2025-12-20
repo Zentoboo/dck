@@ -114,10 +114,6 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
                     </>
                 ) : (
                     <>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                            <path d="M14 3v4c0 1.1.9 2 2 2h4m-1 13H5c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h8l6 6v10c0 1.1-.9 2-2 2z" />
-                            <path d="M12 11v6m-3-3l3 3 3-3" />
-                        </svg>
                         Export Performance Data (CSV)
                     </>
                 )}

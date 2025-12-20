@@ -193,6 +193,9 @@ const App: React.FC = () => {
       if (ShortcutManager.matchesShortcut(e, 'nav.settings')) {
         e.preventDefault();
         setShowSettings(true);
+        setShowFlashcardSession(false);
+        setShowStatsDashboard(false);
+        setShowGuide(false);
         setShowGuideOnStartup(false);
         return;
       }
@@ -201,6 +204,9 @@ const App: React.FC = () => {
       if (ShortcutManager.matchesShortcut(e, 'nav.guide')) {
         e.preventDefault();
         setShowGuide(true);
+        setShowFlashcardSession(false);
+        setShowStatsDashboard(false);
+        setShowSettings(false);
         setShowGuideOnStartup(false);
         return;
       }

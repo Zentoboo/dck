@@ -290,11 +290,6 @@ const StatsDashboard: React.FC<StatsProps> = ({ files, onClose }) => {
                     </div>
                 </div>
 
-                <div className="modal-footer">
-                    <button className="btn-primary" onClick={onClose}>
-                        Close
-                    </button>
-                </div>
             </div>
         </div>
     );
