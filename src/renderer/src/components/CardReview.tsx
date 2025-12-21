@@ -82,7 +82,25 @@ const CardReview: React.FC<CardReviewProps> = ({
 
   const renderMarkdown = (text: string): string => {
     try {
-      return marked(text) as string;
+      // Normalize indentation by removing common leading whitespace
+      const lines = text.split('\n');
+      
+      // Find minimum indentation (excluding empty lines)
+      const minIndent = lines
+        .filter(line => line.trim().length > 0)
+        .reduce((min, line) => {
+          const match = line.match(/^(\s*)/);
+          const indent = match ? match[1].length : 0;
+          return Math.min(min, indent);
+        }, Infinity);
+      
+      // Remove the common indentation from all lines
+      const normalized = lines
+        .map(line => line.slice(minIndent))
+        .join('\n')
+        .trim();
+      
+      return marked(normalized) as string;
     } catch (error) {
       return text;
     }

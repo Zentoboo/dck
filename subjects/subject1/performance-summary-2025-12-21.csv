@@ -1,0 +1,27 @@
+Metric,Value
+Total Sessions,7
+Total Cards Reviewed,11
+Total Study Time (seconds),1037
+Total Study Time (formatted),17:17
+Average Time Per Card (seconds),94
+Average Session Duration (seconds),148
+Average Cards Per Session,2
+
+Rating Distribution,
+Total "Again" Ratings,1 (9%)
+Total "Hard" Ratings,4 (36%)
+Total "Good" Ratings,5 (45%)
+Total "Easy" Ratings,1 (9%)
+
+AI Evaluation Usage,
+Total AI Evaluations,0
+AI Usage Rate,0%
+
+Study Consistency,
+Study Days Count,2
+Average Sessions Per Day,3.5
+Consistency Score (0-100),29
+
+Performance,
+Overall Accuracy Rate,81%
+Improvement Trend,declining

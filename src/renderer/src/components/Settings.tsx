@@ -111,7 +111,7 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
         const config = AIConfigManager.getConfig();
         if (config) {
             config.enabled = newEnabled;
-            AIConfigManager.setActiveProvider(config.providerId, config.apiKey, newEnabled);
+            AIConfigManager.saveConfig(config);
             reloadAIEvaluator();
         }
     };
@@ -123,12 +123,7 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
 
     const handleEditShortcut = (id: string) => {
         setEditingShortcut(id);
-        setIsRecording(false);
-        setConflictError(null);
-    };
-
-    const handleStartRecording = () => {
-        setIsRecording(true);
+        setIsRecording(true); // Auto-start recording
         setConflictError(null);
     };
 
@@ -138,7 +133,15 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const parts = [];
+        // Handle Escape to cancel
+        if (e.key === 'Escape') {
+            setEditingShortcut(null);
+            setIsRecording(false);
+            setConflictError(null);
+            return;
+        }
+
+        const parts: string[] = [];
         if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
         if (e.shiftKey) parts.push('Shift');
         if (e.altKey) parts.push('Alt');
@@ -151,15 +154,20 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
 
             const newShortcut = parts.join('+');
 
-            const conflict = ShortcutManager.checkConflict(newShortcut, id);
+            // Check for conflicts with other shortcuts
+            const shortcuts = ShortcutManager.getShortcuts();
+            const conflict = shortcuts.find(s => s.id !== id && s.key === newShortcut);
+
             if (conflict) {
-                setConflictError(`Conflict with "${conflict.description}"`);
+                setConflictError(`Conflict with "${conflict.name}"`);
             } else {
-                ShortcutManager.updateShortcut(id, newShortcut);
-                loadShortcuts();
-                setEditingShortcut(null);
-                setIsRecording(false);
-                setConflictError(null);
+                const success = ShortcutManager.updateShortcut(id, newShortcut);
+                if (success) {
+                    loadShortcuts();
+                    setEditingShortcut(null);
+                    setIsRecording(false);
+                    setConflictError(null);
+                }
             }
         }
     };
@@ -324,36 +332,30 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
 
                                     {showAddForm && (
                                         <div className="add-provider-form">
-                                            <div className="form-group">
-                                                <label>Provider Name</label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="e.g., My Claude Key"
-                                                    value={newName}
-                                                    onChange={(e) => setNewName(e.target.value)}
-                                                />
-                                            </div>
+                                            <input
+                                                type="text"
+                                                className="setting-input"
+                                                placeholder="Provider Name (e.g., My Claude Key)"
+                                                value={newName}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                            />
 
-                                            <div className="form-group">
-                                                <label>Provider Type</label>
-                                                <select
-                                                    value={newProviderId}
-                                                    onChange={(e) => setNewProviderId(e.target.value)}
-                                                >
-                                                    <option value="claude">Anthropic Claude</option>
-                                                    <option value="grok">xAI Grok</option>
-                                                </select>
-                                            </div>
+                                            <select
+                                                className="setting-select"
+                                                value={newProviderId}
+                                                onChange={(e) => setNewProviderId(e.target.value)}
+                                            >
+                                                <option value="claude">Anthropic Claude</option>
+                                                <option value="grok">xAI Grok</option>
+                                            </select>
 
-                                            <div className="form-group">
-                                                <label>API Key</label>
-                                                <input
-                                                    type="password"
-                                                    placeholder="sk-..."
-                                                    value={newApiKey}
-                                                    onChange={(e) => setNewApiKey(e.target.value)}
-                                                />
-                                            </div>
+                                            <input
+                                                type="password"
+                                                className="setting-input"
+                                                placeholder="API Key (sk-...)"
+                                                value={newApiKey}
+                                                onChange={(e) => setNewApiKey(e.target.value)}
+                                            />
 
                                             <button
                                                 className="btn-save-provider"
@@ -367,7 +369,7 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
 
                                     <div className="providers-list">
                                         {savedProviders.length === 0 ? (
-                                            <p className="no-providers">No providers saved yet. Add one to get started!</p>
+                                            <p className="no-providers-message">No providers saved yet. Add one to get started!</p>
                                         ) : (
                                             savedProviders.map(provider => (
                                                 <div
@@ -385,17 +387,20 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                                             <span className="active-badge">Active</span>
                                                         ) : (
                                                             <button
-                                                                className="btn-activate"
+                                                                className="btn-set-active"
                                                                 onClick={() => handleSetActive(provider.id)}
                                                             >
                                                                 Set Active
                                                             </button>
                                                         )}
                                                         <button
-                                                            className="btn-delete"
+                                                            className="btn-delete-provider"
                                                             onClick={() => handleDeleteProvider(provider.id)}
+                                                            title="Delete provider"
                                                         >
-                                                            Delete
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">
+                                                                <path fill="currentColor" d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
+                                                            </svg>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -407,7 +412,7 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                         ) : activeTab === 'shortcuts' ? (
                             <div className="settings-content shortcuts-content">
                                 <div className="shortcuts-header">
-                                    <p>Click on a shortcut to edit it. Press Escape to cancel.</p>
+                                    <p className="shortcuts-description">Click on a shortcut to edit it. Press Escape to cancel.</p>
                                     <button
                                         className="btn-reset-all"
                                         onClick={handleResetAllShortcuts}
@@ -423,43 +428,38 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                             {shortcuts.map(shortcut => (
                                                 <div key={shortcut.id} className="shortcut-item">
                                                     <div className="shortcut-info">
+                                                        <div className="shortcut-name">{shortcut.name}</div>
                                                         <div className="shortcut-description">{shortcut.description}</div>
                                                     </div>
                                                     <div className="shortcut-controls">
                                                         {editingShortcut === shortcut.id ? (
-                                                            <div className="shortcut-edit-mode">
-                                                                {isRecording ? (
-                                                                    <input
-                                                                        type="text"
-                                                                        className="shortcut-input recording"
-                                                                        placeholder="Press keys..."
-                                                                        onKeyDown={(e) => handleKeyDown(e, shortcut.id)}
-                                                                        autoFocus
-                                                                        readOnly
-                                                                    />
-                                                                ) : (
-                                                                    <>
-                                                                        <button
-                                                                            className="btn-record"
-                                                                            onClick={handleStartRecording}
-                                                                        >
-                                                                            Record New
-                                                                        </button>
-                                                                        <button
-                                                                            className="btn-cancel-edit"
-                                                                            onClick={() => {
-                                                                                setEditingShortcut(null);
-                                                                                setConflictError(null);
-                                                                            }}
-                                                                        >
-                                                                            Cancel
-                                                                        </button>
-                                                                    </>
-                                                                )}
+                                                            <>
+                                                                <input
+                                                                    type="text"
+                                                                    className="shortcut-input recording"
+                                                                    placeholder="Press keys..."
+                                                                    value=""
+                                                                    onKeyDown={(e) => handleKeyDown(e, shortcut.id)}
+                                                                    autoFocus
+                                                                    readOnly
+                                                                />
+                                                                <button
+                                                                    className="btn-cancel-shortcut"
+                                                                    onClick={() => {
+                                                                        setIsRecording(false);
+                                                                        setEditingShortcut(null);
+                                                                        setConflictError(null);
+                                                                    }}
+                                                                    title="Cancel"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                                                        <path fill="currentColor" d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
+                                                                    </svg>
+                                                                </button>
                                                                 {conflictError && (
-                                                                    <span className="conflict-error">{conflictError}</span>
+                                                                    <span className="shortcut-error">{conflictError}</span>
                                                                 )}
-                                                            </div>
+                                                            </>
                                                         ) : (
                                                             <>
                                                                 <div
@@ -468,7 +468,7 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                                                     role="button"
                                                                     tabIndex={0}
                                                                 >
-                                                                    {shortcut.keys}
+                                                                    {ShortcutManager.formatKeyForDisplay(shortcut.key)}
                                                                 </div>
                                                                 <button
                                                                     className="btn-reset-shortcut"

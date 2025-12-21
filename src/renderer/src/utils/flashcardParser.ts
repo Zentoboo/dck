@@ -6,6 +6,35 @@ interface FlashcardQuestion {
   lineNumber: number;
 }
 
+/**
+ * Normalize indentation by removing common leading whitespace
+ */
+function normalizeIndentation(lines: string[]): string {
+  if (lines.length === 0) return '';
+  
+  // Find minimum indentation (excluding empty lines)
+  const minIndent = lines
+    .filter(line => line.trim().length > 0)
+    .reduce((min, line) => {
+      const match = line.match(/^(\s*)/);
+      const indent = match ? match[1].length : 0;
+      return Math.min(min, indent);
+    }, Infinity);
+  
+  // If no valid indentation found, return as-is
+  if (minIndent === Infinity) {
+    return lines.join('\n').trim();
+  }
+  
+  // Remove the common indentation from all lines
+  const normalized = lines
+    .map(line => line.slice(minIndent))
+    .join('\n')
+    .trim();
+  
+  return normalized;
+}
+
 function simpleHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -43,7 +72,7 @@ export function parseMarkdownForFlashcards(
     if (leadingSpaces === 0 && trimmedLine.match(/^-\s+(.+)/)) {
       // Save previous question if exists
       if (currentQuestion && currentAnswer.length > 0) {
-        const answerText = currentAnswer.join('\n').trim();
+        const answerText = normalizeIndentation(currentAnswer);
         if (answerText) {
           questions.push({
             questionId: generateQuestionId(currentQuestion, sourceFile),
@@ -72,7 +101,7 @@ export function parseMarkdownForFlashcards(
 
   // Don't forget the last question
   if (currentQuestion && currentAnswer.length > 0) {
-    const answerText = currentAnswer.join('\n').trim();
+    const answerText = normalizeIndentation(currentAnswer);
     if (answerText) {
       questions.push({
         questionId: generateQuestionId(currentQuestion, sourceFile),
