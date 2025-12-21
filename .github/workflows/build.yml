@@ -13,6 +13,10 @@ jobs:
         os: [windows-latest, macos-latest]
     
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30  # Increase timeout
+    
+    permissions:
+      contents: write  # Need this for creating releases
     
     steps:
       - name: Checkout code
@@ -30,10 +34,14 @@ jobs:
       - name: Build for Windows
         if: matrix.os == 'windows-latest'
         run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build for macOS
         if: matrix.os == 'macos-latest'
         run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifacts
         if: matrix.os == 'windows-latest'
@@ -43,6 +51,7 @@ jobs:
           path: |
             dist/*.exe
             dist/*.exe.blockmap
+          if-no-files-found: warn
 
       - name: Upload macOS artifacts
         if: matrix.os == 'macos-latest'
@@ -52,13 +61,19 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.dmg.blockmap
+            dist/*.zip
+            dist/*.zip.blockmap
+          if-no-files-found: warn
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist/*.exe
             dist/*.dmg
+            dist/*.zip
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
