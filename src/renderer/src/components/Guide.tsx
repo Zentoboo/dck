@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 
 interface GuideProps {
     onClose: () => void;
-    showOnStartup: boolean;
-    onDontShowAgain: () => void;
 }
 
-const Guide: React.FC<GuideProps> = ({ onClose, showOnStartup, onDontShowAgain }) => {
+const Guide: React.FC<GuideProps> = ({ onClose }) => {
     const [currentPage, setCurrentPage] = useState(0);
 
     const pages = [
@@ -169,41 +167,36 @@ chemistry.inorganic.md`}
                     <br />
                     <h4>Saved Decks:</h4>
                     <p>Save your frequently used file combinations as presets for quick access.</p>
-                    <p>Click the "Save Deck" button when selecting files for a session.</p>
                     <br />
-                    <h4>Session Controls:</h4>
+                    <h4>During Review:</h4>
                     <ul>
-                        <li><strong>Skip:</strong> Skip the current card (only before viewing answer)</li>
-                        <li><strong>Undo:</strong> Undo your last rating</li>
+                        <li><strong>Show Answer:</strong> Click to reveal the answer</li>
+                        <li><strong>Rate Your Response:</strong> Choose Again/Hard/Good/Easy</li>
+                        <li><strong>Skip Card:</strong> Mark for later review without affecting schedule</li>
+                        <li><strong>Session Stats:</strong> View progress in the header</li>
                     </ul>
                 </div>
             )
         },
         {
-            title: 'AI Evaluation',
+            title: 'AI-Powered Evaluation',
             content: (
                 <div>
-                    <p>Get intelligent AI feedback on your flashcard answers:</p>
+                    <p>dck can evaluate your answers using AI and provide intelligent feedback:</p>
                     <br />
-                    <h4>Setup Process:</h4>
+                    <h4>Setup:</h4>
                     <ol>
-                        <li>Click Settings icon (⚙️) in the header</li>
-                        <li>Navigate to "AI Evaluation" tab</li>
-                        <li>Click "Add Provider"</li>
-                        <li>Select provider (Claude or Grok)</li>
+                        <li>Go to <strong>Settings → AI Evaluation</strong></li>
+                        <li>Add your AI provider (Claude or Grok)</li>
                         <li>Enter your API key</li>
-                        <li>Enable "AI Evaluation" checkbox</li>
+                        <li>Enable AI Evaluation</li>
                     </ol>
                     <br />
-                    <h4>AI Feedback Includes:</h4>
+                    <h4>During Reviews:</h4>
+                    <p>After typing your answer, AI will analyze it and provide:</p>
                     <ul>
-                        <li><strong>Overall Score:</strong> 0-100% based on answer quality</li>
-                        <li><strong>Accuracy:</strong> How correct your answer is</li>
-                        <li><strong>Completeness:</strong> Whether you covered all key points</li>
-                        <li><strong>Clarity:</strong> How well-structured your response is</li>
-                        <li><strong>Keywords:</strong> Important terms found/missing (highlighted in green)</li>
-                        <li><strong>Suggested Improvements:</strong> Specific ways to improve</li>
-                        <li><strong>Strengths:</strong> What you did well</li>
+                        <li><strong>Overall Score:</strong> 0-100 rating of your answer quality</li>
+                        <li><strong>Detailed Feedback:</strong> What was good and what could be improved</li>
                         <li><strong>Suggested Rating:</strong> AI recommendation (Again/Hard/Good/Easy)</li>
                     </ul>
                     <br />
@@ -355,19 +348,6 @@ physics.mechanics.kinematics.md`}
                             {currentPage === pages.length - 1 ? 'Finish' : 'Next →'}
                         </button>
                     </div>
-                    {showOnStartup && (
-                        <label className="dont-show-again">
-                            <input
-                                type="checkbox"
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        onDontShowAgain();
-                                    }
-                                }}
-                            />
-                            <span>Don't show this guide on startup</span>
-                        </label>
-                    )}
                 </div>
             </div>
         </div>

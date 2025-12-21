@@ -87,25 +87,20 @@ export function updateCardAfterReview(
     due: new Date(card.fsrs.due),
     learning_steps: 0
   };
-
-  console.log('BEFORE FSRS update:', {
-    questionId: card.questionId,
-    state: card.fsrs.state,
-    reps: card.fsrs.reps,
-    rating
-  });
-
+  // console.log('BEFORE FSRS update:', {
+  //   questionId: card.questionId,
+  //   state: card.fsrs.state,
+  //   reps: card.fsrs.reps,
+  //   rating
+  // });
   const reviewResult = f.repeat(fsrsCard, now)[rating];
-  
-  console.log('AFTER FSRS update:', {
-    questionId: card.questionId,
-    newState: reviewResult.card.state,
-    newReps: reviewResult.card.reps,
-    newDue: reviewResult.card.due
-  });
-  
+  // console.log('AFTER FSRS update:', {
+  //   questionId: card.questionId,
+  //   newState: reviewResult.card.state,
+  //   newReps: reviewResult.card.reps,
+  //   newDue: reviewResult.card.due
+  // });
   const wasCorrect = rating === Rating.Good || rating === Rating.Easy;
-  
   return {
     ...card,
     fsrs: {

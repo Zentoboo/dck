@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'ai' | 'shortcuts' | 'export'>('ai');
+    const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'shortcuts' | 'export'>('general');
 
     // AI Settings state
     const [enabled, setEnabled] = useState(false);
@@ -34,6 +34,10 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
     const [conflictError, setConflictError] = useState<string | null>(null);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [shortcutToReset, setShortcutToReset] = useState<string | null>(null);
+    const [showResetAllConfirm, setShowResetAllConfirm] = useState(false);
+
+    // General settings state
+    const [showGuideOnStartup, setShowGuideOnStartup] = useState(true);
 
     useEffect(() => {
         loadProviders();
@@ -42,6 +46,10 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
             setEnabled(config.enabled);
         }
         loadShortcuts();
+
+        // Load guide startup preference
+        const dontShowGuide = localStorage.getItem('dontShowGuide');
+        setShowGuideOnStartup(dontShowGuide !== 'true');
     }, []);
 
     const loadProviders = () => {
@@ -98,69 +106,62 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
     };
 
     const handleToggleEnabled = (newEnabled: boolean) => {
+        setEnabled(newEnabled);
+
         const config = AIConfigManager.getConfig();
         if (config) {
-            AIConfigManager.saveConfig({ ...config, enabled: newEnabled });
-        }
-        setEnabled(newEnabled);
-        reloadAIEvaluator();
-    };
-
-    const getProviderDisplayName = (providerId: string): string => {
-        switch (providerId) {
-            case 'claude': return 'Claude';
-            case 'grok': return 'Grok';
-            default: return providerId;
+            config.enabled = newEnabled;
+            AIConfigManager.setActiveProvider(config.providerId, config.apiKey, newEnabled);
+            reloadAIEvaluator();
         }
     };
 
-    // Shortcut handlers
+    const handleToggleGuideStartup = (show: boolean) => {
+        setShowGuideOnStartup(show);
+        localStorage.setItem('dontShowGuide', show ? 'false' : 'true');
+    };
+
     const handleEditShortcut = (id: string) => {
         setEditingShortcut(id);
+        setIsRecording(false);
+        setConflictError(null);
+    };
+
+    const handleStartRecording = () => {
         setIsRecording(true);
         setConflictError(null);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent, shortcutId: string) => {
+    const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
         if (!isRecording) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        // Handle Escape to cancel
-        if (e.key === 'Escape') {
-            handleCancelEdit();
-            return;
+        const parts = [];
+        if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+        if (e.shiftKey) parts.push('Shift');
+        if (e.altKey) parts.push('Alt');
+
+        const key = e.key;
+        if (!['Control', 'Shift', 'Alt', 'Meta'].includes(key)) {
+            const displayKey = key.length === 1 ? key.toUpperCase() :
+                key === ' ' ? 'Space' : key;
+            parts.push(displayKey);
+
+            const newShortcut = parts.join('+');
+
+            const conflict = ShortcutManager.checkConflict(newShortcut, id);
+            if (conflict) {
+                setConflictError(`Conflict with "${conflict.description}"`);
+            } else {
+                ShortcutManager.updateShortcut(id, newShortcut);
+                loadShortcuts();
+                setEditingShortcut(null);
+                setIsRecording(false);
+                setConflictError(null);
+            }
         }
-
-        // Ignore just modifier keys
-        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
-            return;
-        }
-
-        const keyString = ShortcutManager.eventToKeyString(e.nativeEvent as KeyboardEvent);
-
-        if (!ShortcutManager.isValidKeyString(keyString)) {
-            setConflictError('Invalid key combination');
-            return;
-        }
-
-        const success = ShortcutManager.updateShortcut(shortcutId, keyString);
-
-        if (success) {
-            loadShortcuts();
-            setEditingShortcut(null);
-            setIsRecording(false);
-            setConflictError(null);
-        } else {
-            setConflictError('This key combination is already in use');
-        }
-    };
-
-    const handleCancelEdit = () => {
-        setEditingShortcut(null);
-        setIsRecording(false);
-        setConflictError(null);
     };
 
     const handleResetShortcut = (id: string) => {
@@ -178,10 +179,13 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
     };
 
     const handleResetAllShortcuts = () => {
-        if (window.confirm('Are you sure you want to reset all shortcuts to their defaults?')) {
-            ShortcutManager.resetToDefaults();
-            loadShortcuts();
-        }
+        setShowResetAllConfirm(true);
+    };
+
+    const confirmResetAll = () => {
+        ShortcutManager.resetToDefaults();
+        loadShortcuts();
+        setShowResetAllConfirm(false);
     };
 
     const getCategoryName = (category: string): string => {
@@ -220,6 +224,17 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                 variant="default"
             />
 
+            <ConfirmModal
+                isOpen={showResetAllConfirm}
+                title="Reset All Shortcuts"
+                message="Are you sure you want to reset all shortcuts to their defaults?"
+                confirmText="Reset All"
+                cancelText="Cancel"
+                onConfirm={confirmResetAll}
+                onCancel={() => setShowResetAllConfirm(false)}
+                variant="default"
+            />
+
             <AlertModal
                 isOpen={showSaveAlert}
                 title="Provider Saved"
@@ -235,6 +250,12 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                     </div>
 
                     <div className="settings-tabs">
+                        <button
+                            className={`settings-tab ${activeTab === 'general' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('general')}
+                        >
+                            General
+                        </button>
                         <button
                             className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
                             onClick={() => setActiveTab('ai')}
@@ -256,7 +277,24 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                     </div>
 
                     <div className="modal-content">
-                        {activeTab === 'ai' ? (
+                        {activeTab === 'general' ? (
+                            <div className="settings-content">
+                                <div className="setting-section">
+                                    <h3>Application</h3>
+                                    <label className="setting-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={showGuideOnStartup}
+                                            onChange={(e) => handleToggleGuideStartup(e.target.checked)}
+                                        />
+                                        <span>Show user guide on startup</span>
+                                    </label>
+                                    <p className="setting-description">
+                                        Display the user guide automatically when the application starts
+                                    </p>
+                                </div>
+                            </div>
+                        ) : activeTab === 'ai' ? (
                             <div className="settings-content">
                                 <div className="setting-section">
                                     <label className="setting-label">
@@ -280,48 +318,43 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                             className="btn-add-provider"
                                             onClick={() => setShowAddForm(!showAddForm)}
                                         >
-                                            {showAddForm ? (
-                                                <>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                                        <path d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
-                                                    </svg>
-                                                    Cancel
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                                        <path d="M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z" />
-                                                    </svg>
-                                                    Add Provider
-                                                </>
-                                            )}
+                                            {showAddForm ? '✕ Cancel' : '+ Add Provider'}
                                         </button>
                                     </div>
 
                                     {showAddForm && (
                                         <div className="add-provider-form">
-                                            <input
-                                                type="text"
-                                                className="setting-input"
-                                                placeholder="Name (e.g., My Claude Key)"
-                                                value={newName}
-                                                onChange={(e) => setNewName(e.target.value)}
-                                            />
-                                            <select
-                                                className="setting-select"
-                                                value={newProviderId}
-                                                onChange={(e) => setNewProviderId(e.target.value)}
-                                            >
-                                                <option value="claude">Claude</option>
-                                                <option value="grok">Grok</option>
-                                            </select>
-                                            <input
-                                                type="password"
-                                                className="setting-input"
-                                                placeholder="API Key"
-                                                value={newApiKey}
-                                                onChange={(e) => setNewApiKey(e.target.value)}
-                                            />
+                                            <div className="form-group">
+                                                <label>Provider Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g., My Claude Key"
+                                                    value={newName}
+                                                    onChange={(e) => setNewName(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Provider Type</label>
+                                                <select
+                                                    value={newProviderId}
+                                                    onChange={(e) => setNewProviderId(e.target.value)}
+                                                >
+                                                    <option value="claude">Anthropic Claude</option>
+                                                    <option value="grok">xAI Grok</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>API Key</label>
+                                                <input
+                                                    type="password"
+                                                    placeholder="sk-..."
+                                                    value={newApiKey}
+                                                    onChange={(e) => setNewApiKey(e.target.value)}
+                                                />
+                                            </div>
+
                                             <button
                                                 className="btn-save-provider"
                                                 onClick={handleAddProvider}
@@ -332,13 +365,11 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                         </div>
                                     )}
 
-                                    {savedProviders.length === 0 ? (
-                                        <p className="no-providers-message">
-                                            No providers configured. Add one to enable AI evaluation.
-                                        </p>
-                                    ) : (
-                                        <div className="providers-list">
-                                            {savedProviders.map(provider => (
+                                    <div className="providers-list">
+                                        {savedProviders.length === 0 ? (
+                                            <p className="no-providers">No providers saved yet. Add one to get started!</p>
+                                        ) : (
+                                            savedProviders.map(provider => (
                                                 <div
                                                     key={provider.id}
                                                     className={`provider-item ${provider.id === activeProviderId ? 'active' : ''}`}
@@ -346,42 +377,37 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                                     <div className="provider-info">
                                                         <div className="provider-name">{provider.name}</div>
                                                         <div className="provider-type">
-                                                            {getProviderDisplayName(provider.providerId)}
+                                                            {provider.providerId === 'claude' ? 'Anthropic Claude' : 'xAI Grok'}
                                                         </div>
                                                     </div>
                                                     <div className="provider-actions">
-                                                        {provider.id !== activeProviderId && (
+                                                        {provider.id === activeProviderId ? (
+                                                            <span className="active-badge">Active</span>
+                                                        ) : (
                                                             <button
-                                                                className="btn-set-active"
+                                                                className="btn-activate"
                                                                 onClick={() => handleSetActive(provider.id)}
                                                             >
                                                                 Set Active
                                                             </button>
                                                         )}
-                                                        {provider.id === activeProviderId && (
-                                                            <span className="active-badge">Active</span>
-                                                        )}
                                                         <button
-                                                            className="btn-delete-provider"
+                                                            className="btn-delete"
                                                             onClick={() => handleDeleteProvider(provider.id)}
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                                                <path d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
-                                                            </svg>
+                                                            Delete
                                                         </button>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                            ))
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ) : activeTab === 'shortcuts' ? (
                             <div className="settings-content shortcuts-content">
                                 <div className="shortcuts-header">
-                                    <p className="shortcuts-description">
-                                        Click on any shortcut to edit it, then press your desired key combination. Press Escape to cancel.
-                                    </p>
+                                    <p>Click on a shortcut to edit it. Press Escape to cancel.</p>
                                     <button
                                         className="btn-reset-all"
                                         onClick={handleResetAllShortcuts}
@@ -390,76 +416,78 @@ const Settings: React.FC<SettingsProps> = ({ folderPath, onClose }) => {
                                     </button>
                                 </div>
 
-                                {conflictError && (
-                                    <div className="shortcut-error">
-                                        {conflictError}
-                                    </div>
-                                )}
-
-                                {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
-                                    categoryShortcuts.length > 0 && (
-                                        <div key={category} className="shortcut-category">
-                                            <h3>{getCategoryName(category)}</h3>
-                                            <div className="shortcuts-list">
-                                                {categoryShortcuts.map(shortcut => (
-                                                    <div key={shortcut.id} className="shortcut-item">
-                                                        <div className="shortcut-info">
-                                                            <span className="shortcut-name">{shortcut.name}</span>
-                                                            <span className="shortcut-description">{shortcut.description}</span>
-                                                        </div>
-                                                        <div className="shortcut-controls">
-                                                            {editingShortcut === shortcut.id ? (
-                                                                <>
+                                {Object.entries(groupedShortcuts).map(([category, shortcuts]) => (
+                                    <div key={category} className="shortcut-category">
+                                        <h3>{getCategoryName(category)}</h3>
+                                        <div className="shortcuts-list">
+                                            {shortcuts.map(shortcut => (
+                                                <div key={shortcut.id} className="shortcut-item">
+                                                    <div className="shortcut-info">
+                                                        <div className="shortcut-description">{shortcut.description}</div>
+                                                    </div>
+                                                    <div className="shortcut-controls">
+                                                        {editingShortcut === shortcut.id ? (
+                                                            <div className="shortcut-edit-mode">
+                                                                {isRecording ? (
                                                                     <input
                                                                         type="text"
                                                                         className="shortcut-input recording"
-                                                                        value={isRecording ? 'Press keys...' : shortcut.key}
+                                                                        placeholder="Press keys..."
                                                                         onKeyDown={(e) => handleKeyDown(e, shortcut.id)}
                                                                         autoFocus
                                                                         readOnly
                                                                     />
-                                                                    <button
-                                                                        className="btn-cancel-shortcut"
-                                                                        onClick={handleCancelEdit}
-                                                                        title="Cancel"
-                                                                    >
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">
-                                                                            <path d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <kbd
-                                                                        className="shortcut-key"
-                                                                        onClick={() => handleEditShortcut(shortcut.id)}
-                                                                        title="Click to edit"
-                                                                    >
-                                                                        {ShortcutManager.formatKeyForDisplay(shortcut.key)}
-                                                                    </kbd>
-                                                                    {shortcut.key !== shortcut.defaultKey && (
+                                                                ) : (
+                                                                    <>
                                                                         <button
-                                                                            className="btn-reset-shortcut"
-                                                                            onClick={() => handleResetShortcut(shortcut.id)}
-                                                                            title="Reset to default"
+                                                                            className="btn-record"
+                                                                            onClick={handleStartRecording}
                                                                         >
-                                                                            ↺
+                                                                            Record New
                                                                         </button>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </div>
+                                                                        <button
+                                                                            className="btn-cancel-edit"
+                                                                            onClick={() => {
+                                                                                setEditingShortcut(null);
+                                                                                setConflictError(null);
+                                                                            }}
+                                                                        >
+                                                                            Cancel
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                                {conflictError && (
+                                                                    <span className="conflict-error">{conflictError}</span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div
+                                                                    className="shortcut-key"
+                                                                    onClick={() => handleEditShortcut(shortcut.id)}
+                                                                    role="button"
+                                                                    tabIndex={0}
+                                                                >
+                                                                    {shortcut.keys}
+                                                                </div>
+                                                                <button
+                                                                    className="btn-reset-shortcut"
+                                                                    onClick={() => handleResetShortcut(shortcut.id)}
+                                                                    title="Reset to default"
+                                                                >
+                                                                    ↺
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
-                                                ))}
-                                            </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    )
+                                    </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="settings-content">
-                                <MetricsExport folderPath={folderPath} />
-                            </div>
+                            <MetricsExport folderPath={folderPath} />
                         )}
                     </div>
                 </div>

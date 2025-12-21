@@ -28,8 +28,6 @@ const App: React.FC = () => {
   // Modal state for unsaved changes
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-  const [showGuideOnStartup, setShowGuideOnStartup] = useState(false);
-
   // Auto-load last folder on app start
   useEffect(() => {
     const lastFolder = FolderManager.getLastFolder();
@@ -42,8 +40,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const dontShowGuide = localStorage.getItem('dontShowGuide');
     if (dontShowGuide !== 'true') {
-      // Show guide on first launch or if user hasn't opted out
-      setShowGuideOnStartup(true);
       setShowGuide(true);
     }
   }, []);
@@ -196,7 +192,6 @@ const App: React.FC = () => {
         setShowFlashcardSession(false);
         setShowStatsDashboard(false);
         setShowGuide(false);
-        setShowGuideOnStartup(false);
         return;
       }
 
@@ -207,7 +202,6 @@ const App: React.FC = () => {
         setShowFlashcardSession(false);
         setShowStatsDashboard(false);
         setShowSettings(false);
-        setShowGuideOnStartup(false);
         return;
       }
 
@@ -336,7 +330,6 @@ const App: React.FC = () => {
               onClick={() => {
                 console.log('Guide button clicked');
                 setShowGuide(true);
-                setShowGuideOnStartup(false);
                 setShowSettings(false);
                 setShowFlashcardSession(false);
                 setShowStatsDashboard(false);
@@ -410,12 +403,6 @@ const App: React.FC = () => {
               onClose={() => {
                 console.log('Closing Guide');
                 setShowGuide(false);
-                setShowGuideOnStartup(false);
-              }}
-              showOnStartup={showGuideOnStartup}
-              onDontShowAgain={() => {
-                localStorage.setItem('dontShowGuide', 'true');
-                setShowGuideOnStartup(false);
               }}
             />
           ) : null}
