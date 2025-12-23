@@ -26,7 +26,7 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
 
         try {
             // Generate CSV files
-            const { summary, sessions } = await generateMetricsExport(folderPath);
+            const { summary, sessions, cards } = await generateMetricsExport(folderPath);
 
             // Ask user where to save
             const result = await (window as any).api.selectExportDirectory();
@@ -45,12 +45,14 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
 
-            // Save both CSV files
+            // Save all three CSV files
             const summaryFilename = `performance-summary-${dateStr}.csv`;
             const sessionsFilename = `sessions-detail-${dateStr}.csv`;
+            const cardsFilename = `cards-detail-${dateStr}.csv`;
 
             await (window as any).api.saveCsvFile(result.path, summary, summaryFilename);
             await (window as any).api.saveCsvFile(result.path, sessions, sessionsFilename);
+            await (window as any).api.saveCsvFile(result.path, cards, cardsFilename);
 
             setExportStatus({
                 type: 'success',
@@ -81,12 +83,12 @@ const MetricsExport: React.FC<MetricsExportProps> = ({ folderPath }) => {
                     <li>Total flashcards reviewed and study time</li>
                     <li>Average review time per card</li>
                     <li>Self-rating patterns (Again/Hard/Good/Easy)</li>
-                    <li>AI evaluation usage frequency</li>
+                    <li>AI evaluation usage and rating comparisons</li>
                     <li>Study session consistency metrics</li>
                 </ul>
                 <p style={{ marginBottom: '16px', fontSize: '0.85rem', opacity: 0.6 }}>
-                    Exports two CSV files: <strong>performance-summary</strong> (overall statistics)
-                    and <strong>sessions-detail</strong> (per-session breakdown).
+                    Exports three CSV files: <strong>performance-summary</strong> (overall statistics),
+                    <strong>sessions-detail</strong> (per-session breakdown), and <strong>cards-detail</strong> (individual card reviews with AI ratings).
                 </p>
             </div>
 

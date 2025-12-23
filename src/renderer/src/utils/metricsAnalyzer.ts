@@ -48,12 +48,16 @@ export interface OverallMetrics {
 
 export interface CardReview {
   sessionDate: string;
+  sessionTime: string;
   fileName: string;
   question: string;
-  rating: string;
+  userRating: string; // What user actually rated (1-4)
+  aiSuggestedRating: string | null; // What AI suggested (1-4)
+  ratingComparison: string | null; // "lower", "equal", "higher", or null if no AI
   timeSpent: number; // seconds (estimated)
   aiUsed: boolean;
   accuracy: number | null; // percentage if AI was used
+  overallScore: number | null; // AI overall score if used
 }
 
 /**
@@ -82,7 +86,7 @@ export function parseSessionFile(content: string, filename: string): SessionMetr
     const easyMatch = content.match(/\|\s*Easy.*?\|\s*(\d+)\s*\|\s*([\d.]+)%\s*\|/i);
     
     // Count AI usage (cards with AI evaluation)
-    const aiEvaluationSections = content.match(/### AI Evaluation/g);
+    const aiEvaluationSections = content.match(/\*\*AI Evaluation:\*\*/g);
     const aiUsageCount = aiEvaluationSections ? aiEvaluationSections.length : 0;
     
     const cardsReviewed = cardsMatch ? parseInt(cardsMatch[1]) : 0;
@@ -105,6 +109,115 @@ export function parseSessionFile(content: string, filename: string): SessionMetr
     console.error('Error parsing session file:', error);
     return null;
   }
+}
+
+/**
+ * Parse detailed card reviews from a session file
+ */
+export function parseCardReviews(content: string, filename: string): CardReview[] {
+  try {
+    // Extract date and time from filename
+    const dateMatch = filename.match(/session\.(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})/);
+    if (!dateMatch) return [];
+    
+    const [, year, month, day, hour, minute] = dateMatch;
+    const sessionDate = `${year}-${month}-${day}`;
+    const sessionTime = `${hour}:${minute}`;
+    
+    const reviews: CardReview[] = [];
+    
+    // Split into card sections - actual format is "### Card 1"
+    const cardSections = content.split(/### Card \d+/);
+    
+    for (let i = 1; i < cardSections.length; i++) {
+      const section = cardSections[i];
+      
+      // Extract file name - actual format is "**Source File:**"
+      const fileMatch = section.match(/\*\*Source File:\*\*\s*`([^`]+)`/);
+      const fileName = fileMatch ? fileMatch[1] : 'Unknown';
+      
+      // Extract question - actual format is blockquote "> question"
+      const questionMatch = section.match(/\*\*Question:\*\*\s*\n>\s*(.+)/);
+      const question = questionMatch ? questionMatch[1].trim() : '';
+      
+      // Extract user rating - actual format is "**Self-Rating:**"
+      const ratingMatch = section.match(/\*\*Self-Rating:\*\*\s*([^\n]+)/);
+      const userRating = ratingMatch ? ratingMatch[1].trim() : '';
+      
+      // Check if AI was used
+      const aiUsed = section.includes('**AI Evaluation:**');
+      
+      let aiSuggestedRating: string | null = null;
+      let overallScore: number | null = null;
+      let ratingComparison: string | null = null;
+      
+      if (aiUsed) {
+        // Extract AI suggested rating - format is "- **Suggested Rating:**"
+        const aiRatingMatch = section.match(/\*\*Suggested Rating:\*\*\s*([^\n]+)/);
+        if (aiRatingMatch) {
+          aiSuggestedRating = aiRatingMatch[1].trim();
+          
+          // Compare ratings
+          const userRatingNum = getRatingNumber(userRating);
+          const aiRatingNum = getRatingNumber(aiSuggestedRating);
+          
+          if (userRatingNum !== null && aiRatingNum !== null) {
+            if (userRatingNum < aiRatingNum) {
+              ratingComparison = 'lower';
+            } else if (userRatingNum === aiRatingNum) {
+              ratingComparison = 'equal';
+            } else {
+              ratingComparison = 'higher';
+            }
+          }
+        }
+        
+        // Extract overall score - format is "- **Overall Score:**"
+        const scoreMatch = section.match(/\*\*Overall Score:\*\*\s*(\d+)%/);
+        if (scoreMatch) {
+          overallScore = parseInt(scoreMatch[1]);
+        }
+      }
+      
+      // Estimate time spent (total session time / cards reviewed)
+      const durationMatch = content.match(/\|\s*Total Duration\s*\|\s*(\d+)s?\s*\|/i);
+      const cardsMatch = content.match(/\|\s*Cards Reviewed\s*\|\s*(\d+)\s*\|/i);
+      const avgTime = (durationMatch && cardsMatch) 
+        ? Math.round(parseInt(durationMatch[1]) / parseInt(cardsMatch[1]))
+        : 0;
+      
+      reviews.push({
+        sessionDate,
+        sessionTime,
+        fileName,
+        question: question.substring(0, 100), // Truncate for CSV
+        userRating,
+        aiSuggestedRating,
+        ratingComparison,
+        timeSpent: avgTime,
+        aiUsed,
+        accuracy: overallScore,
+        overallScore
+      });
+    }
+    
+    return reviews;
+  } catch (error) {
+    console.error('Error parsing card reviews:', error);
+    return [];
+  }
+}
+
+/**
+ * Convert rating text to number for comparison
+ */
+function getRatingNumber(rating: string): number | null {
+  const lowerRating = rating.toLowerCase();
+  if (lowerRating.includes('again')) return 1;
+  if (lowerRating.includes('hard')) return 2;
+  if (lowerRating.includes('good')) return 3;
+  if (lowerRating.includes('easy')) return 4;
+  return null;
 }
 
 /**
@@ -319,29 +432,75 @@ export function generateSessionsCSV(sessions: SessionMetrics[]): string {
 }
 
 /**
+ * Generate CSV content for detailed card-level data
+ */
+export function generateCardsCSV(reviews: CardReview[]): string {
+  const headers = [
+    'Date',
+    'Time',
+    'File',
+    'Question',
+    'User Rating',
+    'AI Suggested Rating',
+    'Rating Comparison',
+    'Time Spent (seconds)',
+    'AI Used',
+    'Overall Score (%)'
+  ];
+  
+  const rows = reviews.map(r => [
+    r.sessionDate,
+    r.sessionTime,
+    r.fileName,
+    `"${r.question.replace(/"/g, '""')}"`, // Escape quotes in question
+    r.userRating,
+    r.aiSuggestedRating || '',
+    r.ratingComparison || '',
+    r.timeSpent,
+    r.aiUsed ? 'Yes' : 'No',
+    r.overallScore !== null ? r.overallScore : ''
+  ]);
+  
+  return [headers, ...rows].map(row => row.join(',')).join('\n');
+}
+
+/**
  * Generate all CSV files and return as object
  */
 export async function generateMetricsExport(
   folderPath: string
-): Promise<{ summary: string; sessions: string }> {
+): Promise<{ summary: string; sessions: string; cards: string }> {
   // Read all session files
   const sessionsFolder = `${folderPath}/.sessions`;
   const files = await window.api.readMdFiles(sessionsFolder);
   
   const sessionMetrics: SessionMetrics[] = [];
+  const allCardReviews: CardReview[] = [];
   
   for (const file of files) {
     if (file.name.startsWith('session.') && file.name.endsWith('.md')) {
       const content = await window.api.readFile(file.path);
+      
+      // Parse session metrics
       const metrics = parseSessionFile(content, file.name);
       if (metrics) {
         sessionMetrics.push(metrics);
       }
+      
+      // Parse card reviews
+      const reviews = parseCardReviews(content, file.name);
+      allCardReviews.push(...reviews);
     }
   }
   
   // Sort by date (newest first)
   sessionMetrics.sort((a, b) => {
+    const dateA = `${a.sessionDate} ${a.sessionTime}`;
+    const dateB = `${b.sessionDate} ${b.sessionTime}`;
+    return dateB.localeCompare(dateA);
+  });
+  
+  allCardReviews.sort((a, b) => {
     const dateA = `${a.sessionDate} ${a.sessionTime}`;
     const dateB = `${b.sessionDate} ${b.sessionTime}`;
     return dateB.localeCompare(dateA);
@@ -353,9 +512,11 @@ export async function generateMetricsExport(
   // Generate CSV files
   const summaryCSV = generateSummaryCSV(overallMetrics);
   const sessionsCSV = generateSessionsCSV(sessionMetrics);
+  const cardsCSV = generateCardsCSV(allCardReviews);
   
   return {
     summary: summaryCSV,
-    sessions: sessionsCSV
+    sessions: sessionsCSV,
+    cards: cardsCSV
   };
 }
