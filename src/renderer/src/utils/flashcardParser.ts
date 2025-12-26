@@ -68,8 +68,9 @@ export function parseMarkdownForFlashcards(
     const trimmedLine = line.trim();
     const leadingSpaces = line.match(/^(\s*)/)?.[1].length || 0;
     
-    // Check if this is a top-level bullet point (question) - NO leading spaces
-    if (leadingSpaces === 0 && trimmedLine.match(/^-\s+(.+)/)) {
+    // Check if this is a top-level bullet point or numbered item (question) - NO leading spaces
+    // Supports: -, *, +, 1., 2., 3., etc.
+    if (leadingSpaces === 0 && trimmedLine.match(/^([-*+]|\d+\.)\s+(.+)/)) {
       // Save previous question if exists
       if (currentQuestion && currentAnswer.length > 0) {
         const answerText = normalizeIndentation(currentAnswer);
@@ -84,9 +85,9 @@ export function parseMarkdownForFlashcards(
         }
       }
 
-      // Start new question
-      const match = trimmedLine.match(/^-\s+(.+)/);
-      currentQuestion = match ? match[1] : trimmedLine;
+      // Start new question - extract text after bullet/number
+      const match = trimmedLine.match(/^([-*+]|\d+\.)\s+(.+)/);
+      currentQuestion = match ? match[2] : trimmedLine;  // match[2] because we have 2 capture groups
       currentAnswer = [];
       questionLineNumber = i + 1;
     }
